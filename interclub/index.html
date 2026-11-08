@@ -169,6 +169,9 @@ dl.sum dt{color:var(--muted)} dl.sum dd{margin:0;min-width:0;overflow-wrap:anywh
 .kw b{font-size:14px;line-height:1.3;overflow-wrap:anywhere}
 .kw .det{font-size:12px;color:var(--muted)}
 .kw button.ghost{align-self:flex-start;font-size:12px;padding:3px 8px;margin-top:4px}
+.kw .score{font:700 18px var(--display);font-variant-numeric:tabular-nums}
+.kw .score.w{color:var(--turf)} .kw .score.v{color:var(--err)}
+.kw .volgt,.wed .volgt{font-size:12px;color:var(--muted);font-style:italic}
 details.later>summary{cursor:pointer;list-style:none;display:inline-flex;gap:8px;align-items:baseline;font:600 14px var(--body);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 16px}
 details.later>summary::-webkit-details-marker{display:none}
 details.later>summary::before{content:"▸";transition:transform .15s}
@@ -302,7 +305,7 @@ footer{font-size:13px;color:var(--muted);text-align:center}
       </div>
       <div class="legende"><span><i class="mijn"></i>Thuiswedstrijd op BTC</span><span><i></i>Mijn ploeg</span></div>
       <div id="resLijst" style="display:flex;flex-direction:column;gap:14px"></div>
-      <p class="hint">Uitslagen van de laatste week waarin gespeeld werd, en de totalen van de lopende interclubperiode. Bron: Tennis en Padel Vlaanderen.</p>
+      <p class="hint">Uitslagen van deze week (bijgewerkt op zaterdag en zondag om 12u, 18u en 23u), van de laatste week waarin gespeeld werd, en de totalen van de lopende interclubperiode. Bron: Tennis en Padel Vlaanderen.</p>
     </div>
   </div>
 
@@ -709,6 +712,9 @@ footer{font-size:13px;color:var(--muted);text-align:center}
   const langDag = d => d.toLocaleDateString("nl-BE",{weekday:"short",day:"numeric",month:"long"}).replace(".","");
   const thuisLogo = (w, kl) => w.thuis_uit==="thuis" ? el("img",{class:kl,src:"../app/logo-btc.jpg",alt:"Thuis op BTC Wemmel",width:"18",height:"26"}) : null;
   const titelVan = w => ploegKort(w.ploeg) + (w.thuis_uit==="thuis" ? " – " : " @ ") + w.tegenstander;
+  const winstKlasse = w => w.matchen_voor > w.matchen_tegen ? "w" : w.matchen_voor < w.matchen_tegen ? "v" : "";
+  const voorbij = w => new Date(String(w.datum).slice(0,19)) < new Date();
+  const inWeek = (ma, w) => { const k = String(w.datum).slice(0,10); return k >= isoDag(ma) && k < isoDag(plusDagen(ma, 7)); };
 
   // Eén weekraster: vr, za en zo altijd; een andere dag enkel als er die dag gespeeld wordt.
   function weekRaster(titel, ma, items){
@@ -724,12 +730,16 @@ footer{font-size:13px;color:var(--muted);text-align:center}
         el("div",{class:"dag-titel",text:(k===vandaag ? "Vandaag · " : "") + kortDag(d)}));
       if(!lijst.length) kol.appendChild(el("p",{class:"leeg",text:"Geen wedstrijden"}));
       lijst.forEach(w => {
-        const b = el("button",{type:"button",class:"ghost",text:"In agenda"}); b.addEventListener("click", () => ics(w));
+        // Gespeeld: score in matchen. Voorbij maar nog geen uitslag: "uitslag volgt". Anders: in agenda zetten.
+        let actie;
+        if(w.gespeeld) actie = el("span",{class:"score " + winstKlasse(w),text:w.matchen_voor + "–" + w.matchen_tegen});
+        else if(voorbij(w)) actie = el("span",{class:"volgt",text:"Uitslag volgt"});
+        else { actie = el("button",{type:"button",class:"ghost",text:"In agenda"}); actie.addEventListener("click", () => ics(w)); }
         kol.appendChild(el("div",{class:"kw" + (w.mijn ? " mijn" : "") + (w.thuis_uit==="thuis" ? " thuis" : "")},
           el("div",{class:"r1"}, el("span",{class:"uur",text:uurFmt(w.datum)}), thuisLogo(w, "logo")),
           el("b",{text:titelVan(w)}),
           el("span",{class:"det",text:[w.thuis_uit==="thuis" ? null : "Uit", w.ronde, w.kapitein ? "kapitein " + w.kapitein : null].filter(Boolean).join(" · ")}),
-          b));
+          actie));
       });
       raster.appendChild(kol);
     });
@@ -741,10 +751,11 @@ footer{font-size:13px;color:var(--muted);text-align:center}
   function toonKalender(){
     const box = $("kalLijst"); box.textContent = "";
     const enkelMijn = document.querySelector("input[name=kalFilter]:checked").value==="mijn";
-    const komend = kal.wedstrijden.filter(w => !w.gespeeld && (!enkelMijn || w.mijn));
+    const zichtbaar = kal.wedstrijden.filter(w => !enkelMijn || w.mijn);
+    const komend = zichtbaar.filter(w => !w.gespeeld);
     const ma0 = maandag(new Date()), ma1 = plusDagen(ma0, 7), ma2 = plusDagen(ma0, 14);
-    const inWeek = (ma, w) => { const k = String(w.datum).slice(0,10); return k >= isoDag(ma) && k < isoDag(plusDagen(ma, 7)); };
-    box.appendChild(weekRaster("Deze week", ma0, komend.filter(w => inWeek(ma0, w))));
+    // Deze week: ook de gespeelde wedstrijden (met score), zodat de uitslag meteen op de kaart staat.
+    box.appendChild(weekRaster("Deze week", ma0, zichtbaar.filter(w => inWeek(ma0, w))));
     box.appendChild(weekRaster("Volgende week", ma1, komend.filter(w => inWeek(ma1, w))));
     const later = komend.filter(w => String(w.datum).slice(0,10) >= isoDag(ma2));
     if(later.length){
@@ -764,7 +775,13 @@ footer{font-size:13px;color:var(--muted);text-align:center}
   async function laadResultaten(){
     const box = $("resLijst");
     if(!res){ box.textContent = ""; box.appendChild(el("p",{class:"notice",text:"Laden…"}));
-      try{ res = await rpc("club_ic_resultaten", {p_token:TOKEN}); if(res.fout) throw new Error(res.fout); }
+      try{
+        // Resultaten + kalender (voor "Deze week": ook wedstrijden waarvan de uitslag nog moet komen)
+        const [r, k] = await Promise.all([rpc("club_ic_resultaten", {p_token:TOKEN}), kal ? kal : rpc("club_ic_kalender", {p_token:TOKEN})]);
+        if(r.fout) throw new Error(r.fout);
+        if(!k.fout) kal = k;
+        res = r;
+      }
       catch(e){ res = null; if(e.message!=="niet aangemeld"){ box.textContent = ""; box.appendChild(el("p",{class:"notice","data-kind":"err",text:"Laden lukte niet: " + e.message})); } return; }
     }
     toonResultaten();
@@ -798,26 +815,47 @@ footer{font-size:13px;color:var(--muted);text-align:center}
     const box = $("resLijst"); box.textContent = "";
     const enkelMijn = document.querySelector("input[name=resFilter]:checked").value==="mijn";
     const alle = res.wedstrijden.filter(w => !enkelMijn || w.mijn);
-    if(!alle.length){ box.appendChild(el("p",{class:"notice",text:enkelMijn ? "Nog geen uitslagen van jouw ploegen in deze interclubperiode." : "Nog geen uitslagen in deze interclubperiode."})); return; }
     const dagVan = w => new Date(String(w.datum).slice(0,10) + "T12:00");
-    const ma = maandag(dagVan(alle[0])), van = isoDag(ma), tot = isoDag(plusDagen(ma, 7));
-    const week = alle.filter(w => { const k = String(w.datum).slice(0,10); return k >= van && k < tot; })
-                     .sort((x, y) => String(x.datum).localeCompare(String(y.datum)) || x.ploeg.localeCompare(y.ploeg));
-    const eerste = dagVan(week[0]), laatste = dagVan(week[week.length - 1]);
-    const lijst = el("div",{class:"uitslagen"});
-    week.forEach(w => {
-      const k = w.matchen_voor > w.matchen_tegen ? "w" : w.matchen_voor < w.matchen_tegen ? "v" : "";
-      lijst.appendChild(el("div",{class:"wed" + (w.mijn ? " mijn" : "") + (w.thuis_uit==="thuis" ? " thuis" : "")},
-        el("span",{class:"uur",style:"font-size:14px",text:kortDag(dagVan(w))}),
+    const opDatum = (x, y) => String(x.datum).localeCompare(String(y.datum)) || x.ploeg.localeCompare(y.ploeg);
+    const kaart = (w, links) => {
+      const rechts = w.gespeeld ? el("span",{class:"score " + winstKlasse(w),text:w.matchen_voor + "–" + w.matchen_tegen})
+                   : el("span",{class:"volgt",text:voorbij(w) ? "Uitslag volgt" : "Gepland"});
+      return el("div",{class:"wed" + (w.mijn ? " mijn" : "") + (w.thuis_uit==="thuis" ? " thuis" : "")},
+        el("span",{class:"uur",style:"font-size:14px",text:links}),
         el("div",{class:"ploegen"}, el("b",{}, thuisLogo(w, "logo"), titelVan(w)), el("span",{text:[w.thuis_uit==="thuis" ? null : "Uit", w.ronde].filter(Boolean).join(" · ")})),
-        el("div",{class:"rechts"}, el("span",{class:"score " + k,text:w.matchen_voor + "–" + w.matchen_tegen}))));
-    });
-    const periode = eerste.getTime()===laatste.getTime() ? langDag(eerste) : langDag(eerste) + " – " + langDag(laatste);
-    box.appendChild(el("section",{class:"week"},
-      el("div",{class:"week-kop"}, el("h2",{text:"Laatste speelweek"}), el("span",{text:periode + " · " + week.length + (week.length===1 ? " ontmoeting" : " ontmoetingen")})),
-      lijst));
+        el("div",{class:"rechts"}, rechts));
+    };
     const wie = enkelMijn ? "Mijn ploegen" : "BTC";
-    box.appendChild(meters(wie + " die week", enkelMijn ? "jouw ploegen samen" : "alle BTC-ploegen samen", week));
+
+    // 1. Deze week (maandag–zondag): gespeeld met score, voorbij zonder uitslag, of nog gepland.
+    const ma0 = maandag(new Date());
+    const dezeWeek = kal ? kal.wedstrijden.filter(w => (!enkelMijn || w.mijn) && inWeek(ma0, w)).sort(opDatum) : [];
+    if(dezeWeek.length){
+      const gespeeld = dezeWeek.filter(w => w.gespeeld).length;
+      const lijst0 = el("div",{class:"uitslagen"});
+      dezeWeek.forEach(w => lijst0.appendChild(kaart(w, kortDag(dagVan(w)) + (w.gespeeld ? "" : " " + uurFmt(w.datum)))));
+      box.appendChild(el("section",{class:"week"},
+        el("div",{class:"week-kop"}, el("h2",{text:"Deze week"}),
+          el("span",{text:langDag(ma0) + " – " + langDag(plusDagen(ma0, 6)) + " · " + gespeeld + " van " + dezeWeek.length + " gespeeld"})),
+        lijst0));
+    }
+
+    if(!alle.length){ box.appendChild(el("p",{class:"notice",text:enkelMijn ? "Nog geen uitslagen van jouw ploegen in deze interclubperiode." : "Nog geen uitslagen in deze interclubperiode."})); return; }
+
+    // 2. Laatste speelweek: enkel apart tonen als dat niet deze week is (anders staat ze hierboven al).
+    const ma = maandag(dagVan(alle[0])), van = isoDag(ma), tot = isoDag(plusDagen(ma, 7));
+    const week = alle.filter(w => { const k = String(w.datum).slice(0,10); return k >= van && k < tot; }).sort(opDatum);
+    const ditIsDezeWeek = van === isoDag(ma0) && dezeWeek.length;
+    if(!ditIsDezeWeek){
+      const eerste = dagVan(week[0]), laatste = dagVan(week[week.length - 1]);
+      const lijst = el("div",{class:"uitslagen"});
+      week.forEach(w => lijst.appendChild(kaart(w, kortDag(dagVan(w)))));
+      const periode = eerste.getTime()===laatste.getTime() ? langDag(eerste) : langDag(eerste) + " – " + langDag(laatste);
+      box.appendChild(el("section",{class:"week"},
+        el("div",{class:"week-kop"}, el("h2",{text:"Laatste speelweek"}), el("span",{text:periode + " · " + week.length + (week.length===1 ? " ontmoeting" : " ontmoetingen")})),
+        lijst));
+    }
+    box.appendChild(meters(wie + (ditIsDezeWeek ? " deze week" : " die week"), enkelMijn ? "jouw ploegen samen" : "alle BTC-ploegen samen", week));
     box.appendChild(meters(wie + " dit seizoen", (res.periode || "lopende periode") + " · " + alle.length + " ontmoetingen", alle));
   }
   document.querySelectorAll("input[name=resFilter]").forEach(i => i.addEventListener("change", () => res && toonResultaten()));

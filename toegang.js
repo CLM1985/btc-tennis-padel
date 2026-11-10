@@ -50,7 +50,35 @@
     (document.body ? Promise.resolve() : new Promise(function (r) { document.addEventListener("DOMContentLoaded", r); }))
       .then(function () { document.body.insertBefore(b, document.body.firstChild); });
   }
-  window.BTC = { token: lees(SLEUTEL), naarLogin: naarLogin, afmelden: afmelden, voorbeeldBalk: voorbeeldBalk, voorbeeldStop: voorbeeldStop };
+  /* Gebruik opvolgen (10/11/2026): per paginabezoek en per eerste klik op een tabblad één teller in de
+     database (club_bezoek: per dag, lid, pagina, tabblad, gsm/computer). Geen IP, geen uur, geen inhoud.
+     Niet in de voorbeeldmodus; de database controleert dat ook. Fouten worden genegeerd. */
+  var GEZIEN = {};
+  function paginaSleutel() {
+    if (window.BTC_START) return "start";
+    var d = location.pathname.split("/").filter(Boolean), laatste = d[d.length - 1] || "";
+    var map = /\.html$/.test(laatste) ? d[d.length - 2] || "" : laatste;
+    var bestand = /\.html$/.test(laatste) && laatste !== "index.html" ? laatste.replace(/\.html$/, "") : "";
+    var sleutel = map === "ladder-inschrijving" && bestand === "app" ? "ladder" : (bestand ? map + "-" + bestand : map);
+    return (sleutel || "start").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 40) || "start";
+  }
+  function apparaat() {
+    try { return (matchMedia("(pointer: coarse)").matches && Math.min(screen.width, screen.height) < 820) || innerWidth < 640 ? "gsm" : "computer"; }
+    catch (e) { return ""; }
+  }
+  function bezoek(onderdeel) {
+    var tok = lees(SLEUTEL); if (!tok || lees(VB)) return;
+    var o = String(onderdeel || "").replace(/\s+/g, " ").trim().slice(0, 40), k = paginaSleutel() + "|" + o;
+    if (GEZIEN[k]) return; GEZIEN[k] = 1;
+    post("club_bezoek", { p_token: tok, p_pagina: paginaSleutel(), p_onderdeel: o || null, p_apparaat: apparaat() });
+  }
+  document.addEventListener("click", function (e) {
+    var t = e.target && e.target.closest ? e.target.closest('[role="tab"]') : null;
+    if (t) bezoek(t.textContent);
+  }, true);
+  bezoek();
+
+  window.BTC = { token: lees(SLEUTEL), naarLogin: naarLogin, afmelden: afmelden, voorbeeldBalk: voorbeeldBalk, voorbeeldStop: voorbeeldStop, bezoek: bezoek };
   if (window.BTC_START) return;            // startpagina: zelf aanmelden, balk via club_mij
   if (window.BTC_PUBLIEK) { kop(); if (window.BTC.token) { voorbeeldBalk(lees(VB)); zijbalk(); } }  // publieke pagina: geen doorverwijzing
   else if (!window.BTC.token) naarLogin();

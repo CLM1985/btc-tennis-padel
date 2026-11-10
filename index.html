@@ -517,7 +517,7 @@ async function doeLogin(){
   $("lfout").textContent="";
   try{const r=await rpc("club_login",{p_speler:keuze,p_code:$("lcode").value});
     if(r.fout){$("lfout").textContent="Aanmelden lukte niet: "+r.fout+".";return;}
-    zet("btc-club-token",r.token); zet("ladder_token",null); $("lcode").value=""; await toonMenu();
+    zet("btc-club-token",r.token); zet("ladder_token",null); $("lcode").value=""; if(window.BTC&&BTC.bezoek)BTC.bezoek(); await toonMenu();
   }catch(e){$("lfout").textContent=e.message||"Aanmelden mislukt.";}
 }
 $("ldoe").addEventListener("click",doeLogin);

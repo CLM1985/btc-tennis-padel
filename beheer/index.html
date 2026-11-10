@@ -85,6 +85,73 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 .who .home{color:var(--title2);font-weight:600;font-size:.9rem}
 .who > div{display:grid;gap:6px;justify-items:end}
 @media (max-width:560px){.who > div{justify-items:start}}
+
+/* ---- Gebruik (10/11/2026) ---- */
+.g-kop{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
+.g-kop p{margin:4px 0 0}
+.seg{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.seg button{font:600 13px var(--body);border:0;background:transparent;color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(21,43,70,.12),0 0 0 1px var(--line)}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:400px){.kpis{grid-template-columns:minmax(0,1fr)}}
+#v-gebruik th.num,#v-gebruik td.num{text-align:right}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;gap:4px;align-content:start;position:relative;overflow:hidden}
+.kpi.hoofd::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--lime)}
+.kpi .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kpi .w{font:800 34px/1 var(--display);color:var(--title);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.kpi .w small{font:600 15px var(--body);color:var(--muted);margin-left:4px;letter-spacing:0}
+.kpi .sub{font-size:13px;color:var(--muted)}
+.delta{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;justify-self:start}
+.delta.op{background:var(--soft);color:var(--accent)}.delta.neer{background:var(--bad-soft);color:var(--bad)}.delta.gelijk{background:var(--bg);color:var(--muted)}
+.meter{height:6px;background:var(--bg);border-radius:999px;overflow:hidden;margin-top:6px}
+.meter > i{display:block;height:100%;background:var(--accent);border-radius:999px}
+.g-raster{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:760px){.g-raster{grid-template-columns:minmax(0,1fr)}}
+.g-raster > .card{align-content:start}
+.h3{font:700 16px var(--display);text-transform:uppercase;letter-spacing:.06em;color:var(--title);margin:0}
+.kaartkop{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.kaartkop .msg{font-size:13px}
+.grafiek{position:relative}
+.grafiek svg{display:block;width:100%;height:auto;overflow:visible}
+.grafiek .as{font:500 11px var(--body);fill:var(--muted)}
+.grafiek .rooster{stroke:var(--line);stroke-width:1}
+.grafiek .staaf{fill:var(--accent)}
+.grafiek .staaf.nul{fill:var(--line)}
+.grafiek .doel{fill:transparent;cursor:default}
+.grafiek .doel:hover + .staaf,.grafiek g.actief .staaf{fill:var(--title)}
+.tip{position:absolute;pointer-events:none;background:var(--title);color:var(--surface);font-size:12px;line-height:1.35;border-radius:8px;padding:6px 9px;white-space:nowrap;transform:translate(-50%,calc(-100% - 8px));box-shadow:0 4px 14px rgba(21,43,70,.22);z-index:2}
+.tip b{font-weight:700}
+.rang{display:grid;gap:4px;list-style:none;margin:0;padding:0}
+.rang li{display:grid;gap:4px}
+.rij{display:grid;grid-template-columns:minmax(110px,190px) minmax(0,1fr) 250px;gap:12px;align-items:center;padding:6px 8px;border-radius:8px}
+.rij:hover{background:var(--bg)}
+.rij .nm{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rij .spoor{height:12px;background:var(--bg);border-radius:0 4px 4px 0}
+.rij .spoor > i{display:block;height:100%;background:var(--accent);border-radius:0 4px 4px 0;min-width:3px}
+.rij .cijf{font-size:13px;color:var(--muted);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.rij .cijf b{color:var(--fg);font-size:14px}
+.rang details{margin:0 8px 6px}
+.rang.rol .rij{grid-template-columns:minmax(110px,190px) minmax(0,1fr) 130px}
+@media (max-width:560px){.rang.rol .rij{grid-template-columns:minmax(0,1fr) auto}}
+.subrij .cijf{text-align:right;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.rang summary{font-size:12px;color:var(--accent);font-weight:600;cursor:pointer;list-style:none;padding-left:4px}
+.rang summary::-webkit-details-marker{display:none}
+.rang summary::before{content:"▸ ";}.rang details[open] summary::before{content:"▾ "}
+.subrij{display:grid;grid-template-columns:minmax(100px,180px) minmax(0,1fr) 242px;gap:12px;align-items:center;font-size:13px;padding:3px 8px 3px 18px}
+.subrij .spoor{height:8px;background:var(--bg);border-radius:0 4px 4px 0}.subrij .spoor > i{display:block;height:100%;background:var(--title2);opacity:.55;border-radius:0 4px 4px 0;min-width:2px}
+@media (max-width:560px){.rij{grid-template-columns:minmax(0,1fr) auto}.rij .spoor{grid-column:1/-1;grid-row:2}.subrij{grid-template-columns:minmax(0,1fr) auto}.subrij .spoor{display:none}}
+.split{display:flex;gap:2px;height:28px;border-radius:6px;overflow:hidden}
+.split > span{display:flex;align-items:center;padding:0 10px;font-size:12px;font-weight:700;min-width:0;white-space:nowrap}
+.split > span.a{background:var(--accent);color:var(--accent-ink)}.split > span.b{background:var(--band);color:var(--fg)}.split > span.c{background:var(--line);color:var(--fg)}
+.legende{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}
+.legende i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.zoekrij{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.zoekrij input{max-width:280px}
+.leeg{border:1px dashed var(--line);border-radius:12px;padding:20px;text-align:center;color:var(--muted);font-size:14px}
+details.tabel > summary{font-size:13px;color:var(--accent);font-weight:600;cursor:pointer}
+.g-noot{font-size:12px;color:var(--muted);margin:0}
+@media (prefers-reduced-motion:no-preference){.rij .spoor > i,.meter > i{transition:width .35s ease}}
 </style>
 </head>
 <body>
@@ -109,6 +176,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       <button class="tab" role="tab" data-k="leden" aria-selected="true">Leden &amp; codes</button>
       <button class="tab" role="tab" data-k="kapiteins" aria-selected="false">Kapiteins</button>
       <button class="tab" role="tab" data-k="logboek" aria-selected="false">Logboek</button>
+      <button class="tab" role="tab" data-k="gebruik" aria-selected="false">Gebruik</button>
     </div>
 
     <div id="v-leden" class="card">
@@ -122,6 +190,55 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       <h2>Kapiteins</h2>
       <p class="msg">Kapiteins worden automatisch gekoppeld op naam. Lukt dat niet, vul dan het lidnummer in.</p>
       <div id="ktabel"></div>
+    </div>
+
+    <div id="v-gebruik" hidden style="display:grid;gap:16px">
+      <div class="g-kop">
+        <div><h2>Gebruik van de app</h2><p class="msg" id="gPeriode">Laden…</p></div>
+        <div class="seg" role="group" aria-label="Periode" id="gSeg">
+          <button type="button" data-d="7" aria-pressed="false">7 dagen</button>
+          <button type="button" data-d="30" aria-pressed="true">30 dagen</button>
+          <button type="button" data-d="90" aria-pressed="false">90 dagen</button>
+          <button type="button" data-d="365" aria-pressed="false">12 maanden</button>
+        </div>
+      </div>
+      <div id="gFout"></div>
+      <div class="kpis" id="gKpi"></div>
+
+      <section class="card" aria-labelledby="gDagT">
+        <div class="kaartkop"><h3 class="h3" id="gDagT">Actieve leden per dag</h3><span class="msg" id="gDagSub"></span></div>
+        <div class="grafiek" id="gDag"></div>
+        <details class="tabel"><summary>Toon als tabel</summary><div class="tbl" id="gDagTabel"></div></details>
+      </section>
+
+      <section class="card" aria-labelledby="gPagT">
+        <div class="kaartkop"><h3 class="h3" id="gPagT">Meest gebruikte pagina's</h3><span class="msg">bezoeken · leden · tegenover vorige periode</span></div>
+        <ol class="rang" id="gPaginas"></ol>
+      </section>
+
+      <div class="g-raster">
+        <section class="card" aria-labelledby="gWdT">
+          <div class="kaartkop"><h3 class="h3" id="gWdT">Per weekdag</h3><span class="msg">paginabezoeken</span></div>
+          <div class="grafiek" id="gWeekdag"></div>
+        </section>
+        <section class="card" aria-labelledby="gAppT">
+          <div class="kaartkop"><h3 class="h3" id="gAppT">Gsm of computer</h3><span class="msg">aandeel van de bezoeken</span></div>
+          <div id="gApparaat"></div>
+        </section>
+      </div>
+
+      <section class="card" aria-labelledby="gRolT">
+        <div class="kaartkop"><h3 class="h3" id="gRolT">Bereik per rol</h3><span class="msg">actief in de periode / leden met een code</span></div>
+        <div id="gRollen"></div>
+      </section>
+
+      <section class="card" aria-labelledby="gLidT">
+        <div class="kaartkop"><h3 class="h3" id="gLidT">Leden</h3>
+          <div class="zoekrij"><input id="gZoek" type="search" placeholder="Zoek op naam" aria-label="Zoek een lid"><span class="msg" id="gLidTeller"></span></div></div>
+        <div class="tbl" id="gLeden"></div>
+        <details class="tabel"><summary id="gNietSum">Niet actief in de periode</summary><div class="tbl" id="gNiet"></div></details>
+      </section>
+      <p class="g-noot">Wat wordt bijgehouden: per dag, per lid en per pagina (of tabblad) het aantal bezoeken en of het een gsm of computer was. Geen IP-adres, geen uur, geen inhoud. Bezoeken in de voorbeeldmodus tellen niet mee. Gegevens worden na 12 maanden gewist.</p>
     </div>
 
     <div id="v-logboek" class="card" hidden>
@@ -196,9 +313,10 @@ async function start() {
 document.querySelector(".tabs").addEventListener("click", e => {
   const b = e.target.closest(".tab"); if (!b) return;
   document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", String(x === b)));
-  ["leden","kapiteins","logboek"].forEach(k => $("v-" + k).hidden = k !== b.dataset.k);
+  ["leden","kapiteins","logboek","gebruik"].forEach(k => $("v-" + k).hidden = k !== b.dataset.k);
   if (b.dataset.k === "kapiteins") kapiteins();
   if (b.dataset.k === "logboek") logboek();
+  if (b.dataset.k === "gebruik") gebruik();
 });
 
 // ---- leden & codes ----
@@ -274,6 +392,155 @@ async function logboek() {
   $("logtabel").innerHTML = r.regels.length ? `<div class="tbl"><table><thead><tr><th>Moment</th><th>Door</th><th>Actie</th><th>Lid</th><th>Detail</th></tr></thead><tbody>${r.regels.map(l => `
     <tr><td class="num">${new Date(l.moment).toLocaleString("nl-BE", { dateStyle: "short", timeStyle: "short" })}</td><td>${esc(l.door || "systeem")}</td><td>${esc(l.actie)}</td><td>${esc(l.lid)}</td><td>${esc(l.detail)}</td></tr>`).join("")}</tbody></table></div>` : `<p class="msg">Nog geen acties.</p>`;
 }
+
+// ---- gebruik ----
+const PAGINA = { start: "Mijn padel (start)", lessen: "Padellessen", interclub: "Interclub", opstellingsplanner: "Opstellingsplanner",
+  klassementsimulator: "Klassementsimulator", ladder: "Mijn ladder", "ladder-inschrijving": "Ladderinschrijving", tornooien: "Tornooien",
+  commissie: "Commissie", beheer: "Toegang beheer" };
+const ROLNAAM = { lid: "Alle leden", kapitein: "Kapiteins", trainer: "Trainers", hoofdcoach: "Hoofdcoach", commissie: "Commissie", bestuur: "Bestuur", wedstrijdleider: "Wedstrijdleiders", beheerder: "Beheerders" };
+const WDAG = ["ma", "di", "wo", "do", "vr", "za", "zo"];
+let G = null, GDAGEN = 30;
+const nl = (v, d) => Number(v || 0).toLocaleString("nl-BE", { maximumFractionDigits: d || 0 });
+const dIso = (x) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
+const dTekst = (s, opt) => new Date(s + (s.length === 10 ? "T12:00" : "")).toLocaleDateString("nl-BE", opt || { day: "numeric", month: "short" });
+function geleden(ts) {
+  if (!ts) return "nooit";
+  const d = Math.round((new Date(dIso(new Date()) + "T12:00") - new Date(dIso(new Date(ts)) + "T12:00")) / 864e5);
+  return d <= 0 ? "vandaag" : d === 1 ? "gisteren" : d < 7 ? `${d} dagen geleden` : dTekst(dIso(new Date(ts)), { day: "numeric", month: "short", year: d > 300 ? "numeric" : undefined });
+}
+function delta(nu, vorig) {
+  if (!vorig && !nu) return "";
+  if (!vorig) return `<span class="delta op" title="vorige periode: 0">nieuw</span>`;
+  const p = Math.round(100 * (nu - vorig) / vorig);
+  return `<span class="delta ${p > 0 ? "op" : p < 0 ? "neer" : "gelijk"}" title="vorige periode: ${nl(vorig)}">${p > 0 ? "▲" : p < 0 ? "▼" : "="} ${Math.abs(p)}%</span>`;
+}
+async function gebruik() {
+  $("gFout").innerHTML = "";
+  const tot = new Date(), van = new Date(); van.setDate(van.getDate() - (GDAGEN - 1));
+  let r;
+  try { r = await rpc("club_beheer_gebruik", { p_token: token, p_van: dIso(van), p_tot: dIso(tot) }); }
+  catch (err) { $("gFout").innerHTML = `<div class="leeg">Het gebruiksrapport is nog niet geactiveerd in de database.</div>`; $("gPeriode").textContent = ""; return; }
+  if (r.fout) { $("gFout").innerHTML = `<p class="err">${esc(r.fout)}</p>`; return; }
+  G = r; tekenGebruik();
+}
+$("gSeg").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-d]"); if (!b) return;
+  GDAGEN = +b.dataset.d; $("gSeg").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  gebruik();
+});
+function tekenGebruik() {
+  const k = G.kpi;
+  $("gPeriode").textContent = `${dTekst(G.van, { day: "numeric", month: "long" })} – ${dTekst(G.tot, { day: "numeric", month: "long", year: "numeric" })} · vergeleken met de ${G.dagen} dagen ervoor`
+    + (G.eerste_meting && G.eerste_meting > G.van ? ` · meting loopt sinds ${dTekst(G.eerste_meting, { day: "numeric", month: "long" })}` : "");
+  const pct = k.met_code ? Math.round(100 * k.actief / k.met_code) : 0;
+  $("gKpi").innerHTML = [
+    `<div class="kpi hoofd"><span class="lbl">Actieve leden</span><span class="w">${nl(k.actief)}<small>/ ${nl(k.met_code)}</small></span>
+      ${delta(k.actief, k.actief_vorig)}<div class="meter" role="img" aria-label="${pct}% van de leden met een code"><i style="width:${pct}%"></i></div><span class="sub">${pct}% van de leden met een code</span></div>`,
+    `<div class="kpi"><span class="lbl">Paginabezoeken</span><span class="w">${nl(k.bezoeken)}</span>${delta(k.bezoeken, k.bezoeken_vorig)}
+      <span class="sub">${k.actief ? nl(k.bezoeken / k.actief, 1) + " per actief lid" : "–"}</span></div>`,
+    `<div class="kpi"><span class="lbl">Terugkeer</span><span class="w">${k.actieve_dagen_gem == null ? "–" : nl(k.actieve_dagen_gem, 1)}<small>dagen</small></span>
+      <span class="sub">gemiddeld aantal dagen dat een actief lid de app opende</span></div>`,
+    `<div class="kpi"><span class="lbl">Aanmeldingen</span><span class="w">${nl(k.aanmeldingen)}</span><span class="sub">nieuwe aanmeldingen in de periode</span></div>`,
+    `<div class="kpi"><span class="lbl">Nu actief</span><span class="w">${nl(k.actief_7)}<small>/ ${nl(k.actief_30)}</small></span>
+      <span class="sub">leden in de laatste 7 / 30 dagen</span></div>`,
+    `<div class="kpi"><span class="lbl">Nog nooit gebruikt</span><span class="w">${nl(k.nooit)}</span><span class="sub">leden met een code, sinds de start van de meting</span></div>`,
+  ].join("");
+  tekenDag(); tekenPaginas(); tekenWeekdag(); tekenApparaat(); tekenRollen(); tekenLeden2();
+}
+/* staafgrafiek: één reeks, staven met afgeronde top op de basislijn, 2px tussenruimte, hover-tip */
+const GROOTTE = new Map();
+const gro = window.ResizeObserver ? new ResizeObserver((rs) => rs.forEach((r) => { const a = GROOTTE.get(r.target); if (a && Math.abs(r.contentRect.width - a.w) > 8) staven(r.target, a.punten, a.opt); })) : null;
+function staven(el, punten, opt) {
+  const W = Math.max(280, Math.round(el.clientWidth || 720)), H = opt.h || 200;
+  GROOTTE.set(el, { w: W, punten, opt }); if (gro) gro.observe(el);
+  const labels = opt.alle ? punten.length : Math.min(opt.labels || 8, Math.max(3, Math.floor(W / 64)));
+  const L = 34, R = 6, T = 10, B = 26;
+  const max = Math.max(1, ...punten.map((p) => p.w)), stap = max <= 4 ? 1 : Math.ceil(max / 4 / (max > 20 ? 5 : 1)) * (max > 20 ? 5 : 1);
+  const top = Math.ceil(max / stap) * stap, n = punten.length, bw = (W - L - R) / n, gap = Math.min(2 + bw * 0.25, 10), w = Math.max(1, bw - gap);
+  const y = (v) => T + (H - T - B) * (1 - v / top);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opt.label)}">`;
+  for (let v = 0; v <= top; v += stap) svg += `<line class="rooster" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="as" x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${nl(v)}</text>`;
+  const elke = Math.ceil(n / labels);
+  punten.forEach((p, i) => {
+    const x = L + i * bw + gap / 2, h = Math.max(0, y(0) - y(p.w)), r = Math.min(4, w / 2, h);
+    const pad = p.w ? `M${x},${y(0)} v${-(h - r)} q0,${-r} ${r},${-r} h${w - 2 * r} q${r},0 ${r},${r} v${h - r} z` : `M${x},${y(0) - 2} h${w} v2 h${-w} z`;
+    svg += `<g data-i="${i}"><rect class="doel" x="${L + i * bw}" y="${T}" width="${bw}" height="${H - T - B}"/><path class="staaf${p.w ? "" : " nul"}" d="${pad}"/></g>`;
+    if (i % elke === 0) svg += `<text class="as" x="${x + w / 2}" y="${H - 8}" text-anchor="middle">${esc(p.as)}</text>`;
+  });
+  el.innerHTML = svg + `</svg><div class="tip" hidden></div>`;
+  const tip = el.querySelector(".tip"), s = el.querySelector("svg");
+  const toon = (g) => {
+    s.querySelectorAll("g.actief").forEach((x) => x.classList.remove("actief"));
+    if (!g) { tip.hidden = true; return; }
+    g.classList.add("actief"); const p = punten[+g.dataset.i], bb = g.querySelector(".doel").getBBox(), sc = s.clientWidth / W;
+    tip.innerHTML = opt.tip(p); tip.hidden = false;
+    tip.style.left = Math.min(Math.max((bb.x + bb.width / 2) * sc, 70), s.clientWidth - 70) + "px"; tip.style.top = (y(p.w)) * sc + "px";
+  };
+  s.addEventListener("mousemove", (e) => toon(e.target.closest("g[data-i]")));
+  s.addEventListener("mouseleave", () => toon(null));
+  s.addEventListener("click", (e) => toon(e.target.closest("g[data-i]")));
+}
+function tekenDag() {
+  let pt = G.per_dag.map((d) => ({ as: dTekst(d.dag, { day: "numeric", month: "numeric" }), w: d.leden, b: d.bezoeken, van: d.dag, tot: d.dag }));
+  let eenheid = "dag";
+  if (pt.length > 92) {   // 12 maanden: per week
+    eenheid = "week"; const wk = [];
+    G.per_dag.forEach((d, i) => { if (i % 7 === 0) wk.push({ van: d.dag, tot: d.dag, w: 0, b: 0, as: dTekst(d.dag, { day: "numeric", month: "short" }) }); const x = wk[wk.length - 1]; x.tot = d.dag; x.w = Math.max(x.w, d.leden); x.b += d.bezoeken; });
+    pt = wk;
+  }
+  $("gDagT").textContent = eenheid === "week" ? "Actieve leden per week" : "Actieve leden per dag";
+  $("gDagSub").textContent = eenheid === "week" ? "hoogste aantal leden op één dag in die week" : "verschillende leden die de app openden";
+  if (!G.per_dag.some((d) => d.bezoeken)) { $("gDag").innerHTML = `<div class="leeg">Nog geen bezoeken in deze periode.</div>`; $("gDagTabel").innerHTML = ""; return; }
+  staven($("gDag"), pt, { label: $("gDagT").textContent, labels: eenheid === "week" ? 9 : (pt.length <= 10 ? pt.length : 8),
+    tip: (p) => `<b>${p.van === p.tot ? dTekst(p.van, { weekday: "short", day: "numeric", month: "short" }) : "week van " + dTekst(p.van)}</b><br>${nl(p.w)} ${p.w === 1 ? "lid" : "leden"} · ${nl(p.b)} bezoeken` });
+  $("gDagTabel").innerHTML = `<table><thead><tr><th>${eenheid === "week" ? "Week van" : "Dag"}</th><th class="num">Actieve leden</th><th class="num">Bezoeken</th></tr></thead><tbody>${pt.filter((p) => p.b).reverse().map((p) =>
+    `<tr><td>${dTekst(p.van, { weekday: "short", day: "numeric", month: "short" })}</td><td class="num">${p.w}</td><td class="num">${p.b}</td></tr>`).join("")}</tbody></table>`;
+}
+function tekenPaginas() {
+  const P = G.paginas || [];
+  if (!P.length) { $("gPaginas").innerHTML = `<li class="leeg">Nog geen bezoeken in deze periode.</li>`; return; }
+  const max = Math.max(...P.map((p) => p.bezoeken)), tot = P.reduce((a, p) => a + p.bezoeken, 0);
+  $("gPaginas").innerHTML = P.map((p) => {
+    const nm = PAGINA[p.pagina] || p.pagina, sub = p.onderdelen || [], smax = Math.max(1, ...sub.map((o) => o.bezoeken));
+    return `<li><div class="rij" title="${esc(nm)}: ${p.bezoeken} bezoeken door ${p.leden} ${p.leden === 1 ? "lid" : "leden"}">
+      <span class="nm">${esc(nm)}</span><span class="spoor"><i style="width:${(100 * p.bezoeken / max).toFixed(1)}%"></i></span>
+      <span class="cijf"><b>${nl(p.bezoeken)}</b> · ${nl(p.leden)} ${p.leden === 1 ? "lid" : "leden"} · ${Math.round(100 * p.bezoeken / tot)}% ${delta(p.bezoeken, p.vorig)}</span></div>
+      ${sub.length ? `<details><summary>${sub.length} ${sub.length === 1 ? "tabblad" : "tabbladen"}</summary>${sub.map((o) => `<div class="subrij"><span>${esc(o.onderdeel)}</span>
+        <span class="spoor"><i style="width:${(100 * o.bezoeken / smax).toFixed(1)}%"></i></span><span class="cijf">${nl(o.bezoeken)} · ${nl(o.leden)} ${o.leden === 1 ? "lid" : "leden"}</span></div>`).join("")}</details>` : ""}</li>`;
+  }).join("");
+}
+function tekenWeekdag() {
+  const W = G.weekdag || [];
+  if (!W.some((d) => d.bezoeken)) { $("gWeekdag").innerHTML = `<div class="leeg">Nog geen bezoeken.</div>`; return; }
+  staven($("gWeekdag"), W.map((d) => ({ as: WDAG[d.dag - 1], w: d.bezoeken, l: d.leden })), { label: "Bezoeken per weekdag", h: 190, alle: true,
+    tip: (p) => `<b>${p.as}</b><br>${nl(p.w)} bezoeken · ${nl(p.l)} ${p.l === 1 ? "lid" : "leden"}` });
+}
+function tekenApparaat() {
+  const A = (G.apparaat || []).filter((a) => a.bezoeken), tot = A.reduce((s, a) => s + a.bezoeken, 0);
+  if (!tot) { $("gApparaat").innerHTML = `<div class="leeg">Nog geen bezoeken.</div>`; return; }
+  const kl = { gsm: "a", computer: "b", onbekend: "c" }, nm = { gsm: "Gsm of tablet", computer: "Computer", onbekend: "Onbekend" };
+  const orde = ["gsm", "computer", "onbekend"], R = orde.map((k) => A.find((a) => a.apparaat === k)).filter(Boolean);
+  $("gApparaat").innerHTML = `<div class="split" role="img" aria-label="${R.map((a) => `${nm[a.apparaat]} ${Math.round(100 * a.bezoeken / tot)}%`).join(", ")}">${R.map((a) => {
+      const p = Math.round(100 * a.bezoeken / tot); return `<span class="${kl[a.apparaat]}" style="flex:${a.bezoeken} 1 0" title="${nm[a.apparaat]}: ${a.bezoeken} bezoeken">${p >= 12 ? p + "%" : ""}</span>`; }).join("")}</div>
+    <div class="legende">${R.map((a) => `<span><i style="background:var(${a.apparaat === "gsm" ? "--accent" : a.apparaat === "computer" ? "--band" : "--line"});${a.apparaat === "computer" ? "box-shadow:inset 0 0 0 1px var(--line)" : ""}"></i>${nm[a.apparaat]} · ${nl(a.bezoeken)} bezoeken · ${nl(a.leden)} ${a.leden === 1 ? "lid" : "leden"}</span>`).join("")}</div>`;
+}
+function tekenRollen() {
+  const R = (G.rollen || []).filter((r) => r.met_code);
+  $("gRollen").innerHTML = R.length ? `<ol class="rang rol">${R.map((r) => { const p = Math.round(100 * r.actief / r.met_code);
+    return `<li><div class="rij"><span class="nm">${esc(ROLNAAM[r.rol] || r.rol)}</span><span class="spoor" role="img" aria-label="${p}%"><i style="width:${p}%"></i></span>
+      <span class="cijf"><b>${nl(r.actief)}</b> / ${nl(r.met_code)} · ${p}%</span></div></li>`; }).join("")}</ol>` : `<div class="leeg">Nog geen leden met een code.</div>`;
+}
+function tekenLeden2() {
+  const q = $("gZoek").value.trim().toLowerCase(), L = (G.leden || []).filter((l) => !q || (l.naam || "").toLowerCase().includes(q));
+  $("gLidTeller").textContent = `${(G.leden || []).length} actief`;
+  $("gLeden").innerHTML = L.length ? `<table><thead><tr><th>Lid</th><th>Laatst actief</th><th class="num">Dagen</th><th class="num">Bezoeken</th><th>Meest gebruikt</th></tr></thead><tbody>${L.map((l) =>
+    `<tr><td>${esc(l.naam)}</td><td>${geleden(l.laatst)}</td><td class="num">${l.dagen}</td><td class="num">${l.bezoeken}</td><td>${esc(PAGINA[l.pagina] || l.pagina || "–")}</td></tr>`).join("")}</tbody></table>`
+    : `<div class="leeg">${q ? "Geen actief lid met die naam." : "Nog niemand actief in deze periode."}</div>`;
+  const N = (G.niet_actief || []).filter((l) => !q || (l.naam || "").toLowerCase().includes(q));
+  $("gNietSum").textContent = `Niet actief in de periode (${(G.niet_actief || []).length} leden met een code)`;
+  $("gNiet").innerHTML = N.length ? `<table><thead><tr><th>Lid</th><th>Laatst actief</th></tr></thead><tbody>${N.map((l) => `<tr><td>${esc(l.naam)}</td><td>${geleden(l.laatst)}</td></tr>`).join("")}</tbody></table>` : `<p class="msg">Iedereen met een code was actief.</p>`;
+}
+$("gZoek").addEventListener("input", () => { if (G) tekenLeden2(); });
 
 start().catch(err => { $("login").hidden = false; $("loginErr").textContent = err.message; });
 </script>

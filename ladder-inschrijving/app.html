@@ -131,7 +131,7 @@ h2{font-size:1.15rem}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--logo:#F3F1E9}}
 :root[data-theme="dark"]{--logo:#F3F1E9}
 
-/* Terug naar Mijn padel */
+/* Terug naar het ledenportaal */
 .terug{font-size:.85rem;margin:0 0 6px}
 .terug a{color:var(--court);text-decoration:none;font-weight:600}
 .terug a:hover,.terug a:focus-visible{text-decoration:underline}
@@ -175,7 +175,7 @@ footer{font-size:.82rem}
 <div class="wrap">
   <header class="top">
     <div class="merk"><span class="logo" role="img" aria-label="BTC Tennis &amp; Padel"></span><div><div class="eyebrow">BTC Wemmel · padel</div><h1>Mijn padelladder</h1></div></div>
-    <div id="wie" class="wie"><a href="../">Mijn padel</a></div>
+    <div id="wie" class="wie"><a href="../">Ledenportaal</a></div>
   </header>
   <main id="main"><div class="card">Laden…</div></main>
   <footer>Reglement en vragen: wedstrijdleider padelladder. Nog niet ingeschreven? <a href="./">Inschrijven</a>.</footer>
@@ -238,7 +238,7 @@ function zoeklijst(host, placeholder, zoekFn, rijHTML, kies) {
 }
 
 function toonLogin() {
-  $("#wie").innerHTML = `<a href="../">Mijn padel</a>`;
+  $("#wie").innerHTML = `<a href="../">Ledenportaal</a>`;
   $("#main").innerHTML = `<section class="card"><h2>Aanmelden</h2>
     <div id="lzoek"></div><div id="lcode" hidden></div><div id="lmelding" role="status"></div>
     <p class="hint">We houden enkel bij op welke dagen je de app gebruikt, voor de opvolging van de ladder. Die gegevens worden na het seizoen gewist.</p>
@@ -305,7 +305,7 @@ async function afmelden(stil) {
 /* ---------------------------------------------------------------- hoofdscherm */
 async function laad() {
   try { DATA = await metToken("ladder_mijn"); } catch (e) { if (TOKEN) $("#main").innerHTML = `<div class="card fout">${esc(e.message)}</div>`; return; }
-  $("#wie").innerHTML = `<span>${esc(DATA.speler.naam)}</span> · <a href="../">Mijn padel</a> · <button class="link" id="uit">Afmelden</button>`;
+  $("#wie").innerHTML = `<span>${esc(DATA.speler.naam)}</span> · <a href="../">Ledenportaal</a> · <button class="link" id="uit">Afmelden</button>`;
   $("#uit").addEventListener("click", () => afmelden(false));
   teken();
 }
@@ -676,7 +676,7 @@ async function sso() {
   if (r && r.token) { TOKEN = r.token; opslag.set("ladder_token", TOKEN); laad(); return; }
   if (r && r.fout === "niet aangemeld") { BTC.naarLogin(); return; }
   if (r && r.fout === "geen ladderdeelnemer") {
-    $("#wie").innerHTML = `<a href="../">Mijn padel</a> · <button class="link" id="uit">Afmelden</button>`;
+    $("#wie").innerHTML = `<a href="../">Ledenportaal</a> · <button class="link" id="uit">Afmelden</button>`;
     $("#uit").addEventListener("click", () => BTC.afmelden());
     $("#main").innerHTML = `<section class="card"><h2>Nog geen ladderploeg</h2><p>Je neemt (nog) niet deel aan de padelladder.</p><p><a class="knop" href="./" style="display:inline-block;text-decoration:none">Inschrijven</a></p></section>`;
     return;

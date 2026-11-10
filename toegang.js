@@ -57,7 +57,7 @@
   else { kop(); voorbeeldBalk(lees(VB)); zijbalk(); }
 
   /* Eén kop voor alle onderliggende pagina's, in de stijl van de startpagina: lichtblauwe band over de volle
-     breedte, logo, "← Mijn padel", paginatitel, naam en Afmelden. De oude kop van de pagina wordt verborgen;
+     breedte, logo, "← Ledenportaal", paginatitel, naam en Afmelden. De oude kop van de pagina wordt verborgen;
      paginagebonden info (status, telvenster, tornooigegevens) verhuist naar de nieuwe kop. */
   function kop() {
     var klaar = function () {
@@ -65,8 +65,8 @@
       if (!oud) return;
       var h1 = oud.querySelector("h1");
       var band = document.createElement("header"); band.className = "btc-band";
-      band.innerHTML = '<div class="btc-band-wrap"><a class="btc-band-logo" href="../" aria-label="Naar Mijn padel"><img src="../app/logo-btc.jpg" alt=""></a>' +
-        '<div class="btc-band-tekst"><p class="btc-band-terug"><a href="../">← Mijn padel</a></p><h1 class="btc-band-titel"></h1><div class="btc-band-meta"></div></div>' +
+      band.innerHTML = '<div class="btc-band-wrap"><a class="btc-band-logo" href="../" aria-label="Naar het ledenportaal"><img src="../app/logo-btc.jpg" alt=""></a>' +
+        '<div class="btc-band-tekst"><p class="btc-band-terug"><a href="../">← Ledenportaal</a></p><h1 class="btc-band-titel"></h1><div class="btc-band-meta"></div></div>' +
         '<div class="btc-band-wie" hidden><span class="btc-band-naam"></span><button type="button" class="btc-band-af">Afmelden</button></div></div>';
       var titel = band.querySelector(".btc-band-titel");
       var zetTitel = function () { titel.textContent = h1 ? h1.textContent.trim() : document.title; };
@@ -116,7 +116,7 @@
   }
 
   /* Pc-indeling voor de onderliggende pagina's (vanaf 1024 px, enkel aangemeld):
-     links altijd Mijn padel en Clubkalender (360 px), rechts de pagina zelf. Op smallere schermen
+     links altijd MyBTC en Clubkalender (360 px), rechts de pagina zelf. Op smallere schermen
      verandert er niets: de zijbalk is dan verborgen en de inhoud staat zoals voorheen. */
   function zijbalk() {
     var klaar = function () {
@@ -126,13 +126,13 @@
       else { wrap = document.querySelector("body > .wrap"); if (!wrap) return;
              kop = wrap.querySelector(":scope > header, :scope > .top"); inhoudBron = wrap; }
       var raster = document.createElement("div"); raster.className = "btc-raster";
-      var zij = document.createElement("aside"); zij.className = "btc-zij"; zij.setAttribute("aria-label", "Mijn padel en clubkalender");
+      var zij = document.createElement("aside"); zij.className = "btc-zij"; zij.setAttribute("aria-label", "MyBTC en clubkalender");
       var inhoud = document.createElement("div"); inhoud.className = "btc-inhoud";
       Array.prototype.slice.call(inhoudBron.childNodes).forEach(function (n) {
         if (n === kop || (n.nodeType === 1 && (n.matches("nav.terug") || n.tagName === "SCRIPT"))) return;
         inhoud.appendChild(n);
       });
-      zij.innerHTML = kaart("week", "Mijn padel", '<span class="btc-sub" id="btcWeekSub">' + dagenTekst(dagen()) + '</span>',
+      zij.innerHTML = kaart("week", "MyBTC", '<span class="btc-sub" id="btcWeekSub">' + dagenTekst(dagen()) + '</span>',
           '<div id="btcWeekTe" hidden><p class="btc-groep">Te doen</p><div class="btc-lijst" id="btcWeekTeLijst"></div></div>' +
           '<div id="btcWeekPlan" hidden><p class="btc-groep">Gepland</p><div class="btc-lijst" id="btcWeekPlanLijst"></div></div>' +
           '<p class="btc-noot" id="btcWeekNoot">Laden…</p>') +

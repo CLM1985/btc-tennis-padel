@@ -168,22 +168,101 @@ tr.wij td{background:var(--accent-soft)}
 .poulelijst{display:grid;gap:4px;font-size:.88rem}
 .poulelijst div{display:grid;grid-template-columns:minmax(64px,auto) minmax(0,1fr) auto;gap:10px;padding:4px 8px;border-bottom:1px solid var(--line)}
 .poulelijst > div > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.scout table td,.scout table th{vertical-align:middle}
-.scout select{width:100%;min-width:0;max-width:100%}
-.scout table.duo{table-layout:fixed;width:100%}.scout table.duo td{white-space:normal;overflow-wrap:anywhere}
-.scout .gekozen{display:block;font-size:.74rem;color:var(--muted);margin-top:2px}
-.scout table.vs{width:100%}.scout table.vs td:first-child{font-size:.78rem}
-.scout .pk{font-weight:700;white-space:nowrap}
-.scout .pk.ok{color:var(--ok)}.scout .pk.warn{color:var(--warn)}.scout .pk.bad{color:var(--bad)}
-.scout .bar{display:flex;height:22px;border-radius:5px;overflow:hidden;border:1px solid var(--line);font-size:.72rem;font-weight:700}
-.scout .bar span{display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap}
-.scout .ps{display:block;font-size:.64rem;font-weight:700;color:var(--muted)}
 .tab small{display:block;font-family:var(--f-body);font-size:.7rem;color:var(--muted);font-weight:600;letter-spacing:.02em}
 .footnote{font-size:.82rem;color:var(--muted);max-width:80ch}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
 /* Padelrubriek (communicatievoorstel v1): lime streep onder de titel */
 h1::after{content:"";display:block;width:28px;height:3px;background:var(--lime);border-radius:2px;margin-top:8px}
+/* Scouting (voorstel 10/11/2026): blauwgrijze kaarten op crème, navy cijfers, lime enkel als accent */
+:root{--h1:#E8C3B6;--h1f:#7A2E1A;--h5:#C2D1B1;--h5f:#2F4219;--sc-gelijk:#9AA6B2}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--h1:#4A2418;--h1f:#F2A98D;--h5:#34502A;--h5f:#D4EBA8;--sc-gelijk:#5E6E80}}
+:root[data-theme="dark"]{--h1:#4A2418;--h1f:#F2A98D;--h5:#34502A;--h5f:#D4EBA8;--sc-gelijk:#5E6E80}
+.scout{display:flex;flex-direction:column;gap:14px}
+.scout .sc-eb{font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);display:flex;align-items:center;gap:8px}
+.scout .sc-head .sc-eb::before{content:"";width:18px;height:3px;border-radius:2px;background:var(--lime)}
+.scout .sc-eb.muted{color:var(--muted)}.scout .sc-eb.bad{color:var(--bad)}.scout .sc-eb.warn{color:var(--warn)}.scout .sc-eb.ok{color:var(--ok)}
+.scout .sc-head{display:flex;flex-direction:column;gap:4px}
+.scout .sc-head h2{font-size:clamp(1.7rem,6vw,2.3rem);font-weight:800;line-height:1}
+.scout .sc-head .muted{font-size:.85rem;font-weight:600}
+.scout .sc-seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;padding:4px;background:var(--info-soft);border-radius:12px;max-width:520px}
+.scout .sc-seg button{min-height:44px;border:0;border-radius:9px;background:transparent;font-weight:600;font-size:.85rem;cursor:pointer;line-height:1.15}
+.scout .sc-seg button small{display:block;font-size:.7rem;opacity:.7;font-weight:600}
+.scout .sc-seg button[aria-pressed=true],.scout .sc-seg button[aria-selected=true]{background:var(--band);color:var(--on-band);font-weight:700}
+.scout .sc-seg button:disabled{opacity:.45;cursor:not-allowed}
+.scout .sc-cols{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start}
+.scout .sc-links{flex:1 1 340px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.scout .sc-rechts{flex:1.4 1 380px;min-width:0;display:flex;flex-direction:column;gap:10px}
+.scout .sc-hero{background:var(--info-soft);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.scout .sc-hero-top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.scout .sc-big{font-family:var(--f-display);font-weight:800;font-size:4.4rem;line-height:.85;margin-top:6px}
+.scout .sc-big span{font-size:2.2rem}
+.scout .sc-exp{text-align:right;font-family:var(--f-display);font-size:1.6rem;font-weight:700;padding-bottom:4px}
+.scout .sc-exp span{font-size:.95rem;color:var(--muted)}
+.scout .sc-exp small{display:block;font-family:var(--f-body);font-size:.75rem;color:var(--muted);font-weight:600}
+.scout .sc-zin{margin:0;font-weight:600;font-size:.88rem;line-height:1.4}
+.scout .sc-kols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px;align-items:end;min-height:128px}
+.scout .sc-kol{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px}
+.scout .sc-kol-p{font-size:.75rem;font-weight:700}
+.scout .sc-kol-b{display:block;width:100%;border-radius:6px 6px 2px 2px}
+.scout .sc-kol-b.w{background:var(--ok)}.scout .sc-kol-b.g{background:var(--sc-gelijk)}.scout .sc-kol-b.v{background:var(--bad)}
+.scout .sc-kol-l{font-family:var(--f-display);font-weight:700;font-size:1rem}
+.scout .sc-leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.72rem;font-weight:600;color:var(--muted)}
+.scout .sc-leg span{display:flex;align-items:center;gap:6px}
+.scout .sc-leg i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.scout .sc-leg i.w{background:var(--ok)}.scout .sc-leg i.g{background:var(--sc-gelijk)}.scout .sc-leg i.v{background:var(--bad)}
+.scout .sc-alert{background:var(--warn-soft);color:var(--ink);border-radius:14px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
+.scout .sc-alert svg{color:var(--warn);flex:0 0 auto;margin-top:1px}
+.scout .sc-alert div{display:flex;flex-direction:column;gap:3px;font-size:.85rem;line-height:1.45}
+.scout .sc-kop{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.scout .sc-kop h3{font-size:1.3rem;font-weight:700}
+.scout .sc-kop .muted{font-size:.78rem;font-weight:600}
+.scout .sc-kaarten{display:flex;flex-direction:column;gap:8px}
+.scout .sc-kaart{background:var(--info-soft);border-radius:14px;padding:13px 14px;display:flex;flex-direction:column;gap:9px}
+.scout .sc-kaart.sleutel{box-shadow:inset 0 0 0 2px var(--warn)}
+.scout .sc-kaart-h{display:flex;justify-content:space-between;align-items:center;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.scout .sc-tag{background:var(--bg);color:var(--ink);border-radius:999px;padding:2px 9px;text-transform:none;letter-spacing:0}
+.scout .sc-tag.warn{background:transparent;color:var(--warn)}
+.scout .sc-vs{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:center}
+.scout .sc-vs b,.scout .sc-vs span{display:block;font-size:.9rem;line-height:1.3}
+.scout .sc-vs span{font-weight:600}
+.scout .sc-vs small,.scout .sc-rij small{display:block;font-size:.75rem;color:var(--muted);font-weight:600}
+.scout .sc-vs .r{text-align:right}
+.scout .sc-pct{font-family:var(--f-display);font-weight:800;font-size:1.9rem;line-height:1;text-align:center}
+.scout .sc-pct.s{font-size:1.3rem;text-align:right}
+.scout .sc-pct small{display:block;font-family:var(--f-body);font-size:.62rem;font-weight:700;color:var(--muted)}
+.scout .sc-balk{display:flex;height:7px;border-radius:999px;overflow:hidden;background:var(--bg)}
+.scout .sc-balk span{display:block;height:100%}
+.scout .sc-duos{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.scout .sc-picker{background:var(--info-soft);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;max-width:640px}
+.scout .sc-picker select{width:100%;min-height:48px;border-radius:10px;border:1.5px solid var(--ink);background:var(--bg);font-weight:700;font-size:.95rem;padding:0 12px}
+.scout .sc-chips{display:flex;gap:8px;flex-wrap:wrap;font-size:.75rem;font-weight:700}
+.scout .sc-chips span{border-radius:999px;padding:3px 10px}
+.scout .sc-chips .bad{background:var(--bad-soft);color:var(--bad)}.scout .sc-chips .warn{background:var(--warn-soft);color:var(--warn)}.scout .sc-chips .ok{background:var(--ok-soft);color:var(--ok)}
+.scout .sc-lijst{background:var(--info-soft);border-radius:12px;overflow:hidden}
+.scout .sc-rij{display:grid;grid-template-columns:minmax(0,1fr) minmax(48px,90px) 58px;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.scout .sc-rij:last-child{border-bottom:0}
+.scout .sc-rij b{font-size:.9rem}
+.scout .sc-heat{background:var(--info-soft);border-radius:14px;padding:0 14px}
+.scout .sc-heat summary{min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;font-weight:700;list-style:none}
+.scout .sc-heat summary::-webkit-details-marker{display:none}
+.scout .sc-heat summary::after{content:"▾";transition:transform .15s}
+.scout .sc-heat[open] summary::after{transform:rotate(180deg)}
+.scout .sc-heat summary small{margin-left:auto;color:var(--muted);font-weight:600}
+.scout .sc-heat[open]{padding-bottom:14px}
+.scout .sc-heat-box{overflow-x:auto;margin:0 -4px 10px;padding:0 4px}
+.scout .sc-grid{display:grid;gap:4px;align-items:center;font-size:.75rem;font-weight:700}
+.scout .sc-hk{text-align:center;border-radius:8px;padding:6px 2px;line-height:1.2;background:var(--bg)}
+.scout .sc-hk.act{background:var(--band);color:var(--on-band)}
+.scout .sc-hk small{display:block;font-weight:600;opacity:.75}
+.scout .sc-hr{line-height:1.2;font-weight:600}.scout .sc-hr b{font-weight:700}.scout .sc-hr small{display:block;color:var(--muted);font-weight:600}
+.scout .sc-hc{height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.scout .h1{background:var(--h1);color:var(--h1f)}.scout .h2{background:var(--bad-soft);color:var(--bad)}.scout .h3{background:var(--warn-soft);color:var(--warn)}
+.scout .h4{background:var(--ok-soft);color:var(--ok)}.scout .h5{background:var(--h5);color:var(--h5f)}
+.scout .sc-hc.opst{box-shadow:inset 0 0 0 2px var(--ink)}
+.scout .sc-leg i.h1{background:var(--h1)}.scout .sc-leg i.h2{background:var(--bad-soft)}.scout .sc-leg i.h3{background:var(--warn-soft)}.scout .sc-leg i.h4{background:var(--ok-soft)}.scout .sc-leg i.h5{background:var(--h5)}
+.scout .sc-leg i.opst{background:var(--bg);box-shadow:inset 0 0 0 2px var(--ink)}
+
 </style>
 <style>
 /* Clublogin */
@@ -358,7 +437,7 @@ const DEMO_LIJST = {categorie:"PADEL GEMENGD", seizoen:"Najaar", periode:"Voorbe
 const UI_LS="btc-opstelling-ui-v2";
 const ui = Object.assign({comp:"nj-mixed", afdIdx:1, ploegId:null, slot:"p1", opt:"st"}, laadUi());
 if(!ALLE_SLOTS.includes(ui.slot) && ui.slot!=="stand" && ui.slot!=="scout") ui.slot="p1";
-if(!ui.scoutKeuze) ui.scoutKeuze={};
+if(!ui.scoutOns) ui.scoutOns={};
 function laadUi(){ try{ return JSON.parse(localStorage.getItem(UI_LS)||"{}"); }catch(e){ return {}; } }
 function bewaarUi(){ try{ localStorage.setItem(UI_LS, JSON.stringify(ui)); }catch(e){} }
 
@@ -852,32 +931,113 @@ function duoKans(o,a,b){
   return {p:winKans(st(a)-st(b)), ps:false};
 }
 const pctTxt=p=>Math.round(p*100)+"%";
-const pkKl=p=>p>=0.55?"ok":p>=0.45?"warn":"bad";
-function pkCel(k){ return `<span class="pk ${pkKl(k.p)}">${pctTxt(k.p)}</span>${k.ps?'<span class="ps" title="Exact dit duel gesimuleerd op padelstats.be">padelstats</span>':""}`; }
-function duoNaam(ids){ return ids.map(id=>{ const p=sp(id); return p?esc(kortNaam(p.naam))+(geschat(p)?"*":""):"?"; }).join(" / "); }
 function verdeling(ps){ let d=[1]; ps.forEach(p=>{ const n=Array(d.length+1).fill(0); d.forEach((q,i)=>{ n[i]+=q*(1-p); n[i+1]+=q*p; }); d=n; }); return d; }
 function winstUit(d){ const n=d.length-1; let w=0; d.forEach((q,i)=>{ if(i*2>n) w+=q; else if(i*2===n) w+=q/2; }); return w; }
 function posLabel(ri,mi){ const c=C(), nr=ri*2+mi+1;
   if(c.mixed) return `M${nr} · `+(ri===0?(mi===0?"dames":"heren"):(mi===0?"gemengd, sterkste":"gemengd, zwakste"));
   return `M${nr}`+(sterksteRegel(ri)?(mi===0?" · sterkste":" · zwakste"):"");
 }
-function ontmoetingTabel(o, onsOpst, tgnOpst, titel){
-  const c=C(), ps=[]; let rijen="";
+function scoutMatchen(o, onsOpst, tgnOpst){
+  const c=C(), uit=[];
   for(let ri=0; ri<c.rot; ri++) for(let mi=0; mi<2; mi++){
-    const a=onsOpst[ri]?.[mi], b=tgnOpst[ri]?.[mi];
+    const a=onsOpst?.[ri]?.[mi], b=tgnOpst?.[ri]?.[mi];
     if(!a||!b||a.includes(null)||b.includes(null)) continue;
-    const k=duoKans(o,a,b); ps.push(k.p);
     const st=ids=>ids.reduce((s,id)=>s+stS(sp(id)),0);
-    rijen+=`<tr><td class="muted">${posLabel(ri,mi)}</td><td class="n">${pkCel(k)}</td><td>${duoNaam(a)} <span class="muted">${st(a)}</span></td><td>${duoNaam(b)} <span class="muted">${st(b)}</span></td></tr>`;
+    uit.push({ri, mi, nr:ri*2+mi+1, a, b, stA:st(a), stB:st(b), k:duoKans(o,a,b)});
   }
-  if(!ps.length) return "";
-  const d=verdeling(ps), n=ps.length, w=winstUit(d);
-  const kleur=i=>i*2>n?"var(--ok-soft)":i*2===n?"var(--warn-soft)":"var(--bad-soft)";
-  const bar=d.map((q,i)=>({q,i})).reverse().map(({q,i})=>q>0.005?`<span style="width:${(q*100).toFixed(1)}%;background:${kleur(i)}" title="${i}–${n-i}: ${pctTxt(q)}">${q>0.07?`${i}–${n-i} ${pctTxt(q)}`:""}</span>`:"").join("");
-  return `<h3 style="margin-top:6px">${titel} <span class="pk ${pkKl(w)}" style="font-size:1rem">${pctTxt(w)} winstkans</span></h3>
-    <div class="tablewrap"><table class="vs"><thead><tr><th>Match</th><th class="n">Kans BTC</th><th>BTC</th><th>${esc(String(o.tegen||"Tegenstander"))}</th></tr></thead><tbody>${rijen}</tbody></table></div>
-    <div class="bar" aria-label="Kansverdeling van de uitslag">${bar}</div>
-    <p class="footnote" style="margin-top:2px">Verwacht ${ps.reduce((a,b)=>a+b,0).toFixed(1)} van ${n} matchen gewonnen. Kans op ${d.map((q,i)=>`${i}–${n-i}: ${pctTxt(q)}`).reverse().join(" · ")}. Bij ${n/2}–${n/2} beslissen sets en games; dat telt hier als 50%.</p>`;
+  return uit;
+}
+const kansKleur=p=>p>=0.55?"var(--ok)":p>=0.45?"var(--warn)":"var(--bad)";
+const heatKl=v=>v<30?1:v<45?2:v<55?3:v<70?4:5;
+function matchSoort(ri,mi){ const c=C();
+  if(c.mixed) return ri===0?(mi===0?"Damesdubbel":"Herendubbel"):(mi===0?"Gemengd 1":"Gemengd 2");
+  return sterksteRegel(ri)?(mi===0?"Sterkste duo":"Zwakste duo"):"Dubbel";
+}
+const voornamen=ids=>ids.map(id=>{ const p=sp(id); if(!p) return "?"; const t=String(p.naam).trim().split(/\s+/); return esc(t.length>1?t[t.length-1]:t[0])+(geschat(p)?"*":""); }).join(" · ");
+function scoutHero(ms){
+  const ps=ms.map(m=>m.k.p), d=verdeling(ps), n=ps.length, w=winstUit(d), exp=ps.reduce((a,b)=>a+b,0);
+  const winst=d.reduce((s,q,i)=>s+(i*2>n?q:0),0), gelijk=n%2===0?d[n/2]:0, verlies=1-winst-gelijk;
+  const max=Math.max(...d);
+  const kolommen=d.map((q,i)=>({q,i})).reverse().map(({q,i})=>{
+    const kl=i*2>n?"w":i*2===n?"g":"v";
+    return `<div class="sc-kol"><span class="sc-kol-p">${pctTxt(q)}</span><span class="sc-kol-b ${kl}" style="height:${Math.max(3,Math.round(q/max*84))}px"></span><span class="sc-kol-l">${i}–${n-i}</span></div>`; }).join("");
+  // samenvatting in één zin
+  const zeker=ms.filter(m=>m.k.p>=0.7).map(m=>matchSoort(m.ri,m.mi).toLowerCase());
+  const zwak=ms.filter(m=>m.k.p<0.45);
+  const toon=w>=0.6?"Jullie zijn favoriet.":w>=0.45?"Toss-up.":"Jullie zijn underdog.";
+  const zin=`${toon}${zeker.length?` ${zeker.length===1?"De":"Jullie winnen de"} ${zeker.join(" en ")} ${zeker.length===1?"is bijna zeker":"bijna zeker"}.`:""}${zwak.length?` ${zwak.length===1?"Eén match":zwak.length+" matchen"} onder 45%.`:""}`;
+  return `<section class="sc-hero" aria-label="Kans op winst">
+    <div class="sc-hero-top"><div><div class="sc-eb">Kans op winst</div><div class="sc-big">${Math.round(w*100)}<span>%</span></div></div>
+      <div class="sc-exp"><b>${exp.toFixed(1).replace(".",",")}</b> <span>/ ${n}</span><small>matchen verwacht</small></div></div>
+    <p class="sc-zin">${esc(zin)}</p>
+    <div class="sc-eb muted">Mogelijke uitslag</div>
+    <div class="sc-kols">${kolommen}</div>
+    <div class="sc-leg"><span><i class="w"></i>gewonnen ${pctTxt(winst)}</span>${n%2===0?`<span><i class="g"></i>${n/2}–${n/2}: sets en games beslissen ${pctTxt(gelijk)}</span>`:""}<span><i class="v"></i>verloren ${pctTxt(verlies)}</span></div>
+  </section>`;
+}
+function scoutSleutel(ms){
+  const zwak=ms.filter(m=>m.k.p<0.45).sort((a,b)=>a.k.p-b.k.p);
+  if(!zwak.length) return {html:"", nrs:new Set()};
+  const telt=new Map(); zwak.forEach(m=>m.b.forEach(id=>telt.set(id,(telt.get(id)||0)+1)));
+  const dubbel=[...telt.entries()].filter(([,n])=>n>1).map(([id])=>id);
+  const metLidw=m=>{ const t=matchSoort(m.ri,m.mi); return (/dubbel$/i.test(t)?"de ":"")+t.toLowerCase(); };
+  const lijst=zwak.slice().sort((a,b)=>a.nr-b.nr).map(m=>`${metLidw(m)} (${pctTxt(m.k.p)})`).join(" en ");
+  const titel=dubbel.length?`${voornamen(dubbel)} speelt twee keer`:`Sleutelmatch: M${zwak[0].nr}`;
+  const tekst=dubbel.length?`In ${lijst}. Daar valt de beslissing.`:`${matchSoort(zwak[0].ri,zwak[0].mi)}: ${pctTxt(zwak[0].k.p)} kans.${zwak.length>1?` Ook ${zwak.slice(1).map(m=>`M${m.nr} (${pctTxt(m.k.p)})`).join(", ")} onder 45%.`:""}`;
+  return {nrs:new Set(zwak.map(m=>m.nr)), html:`<section class="sc-alert" aria-label="Sleutelmatch">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>
+    <div><b>${titel}</b><span>${tekst}</span></div></section>`};
+}
+function scoutKaarten(ms, sleutel){
+  const c=C(); let html="";
+  for(let ri=0; ri<c.rot; ri++){
+    const rij=ms.filter(m=>m.ri===ri); if(!rij.length) continue;
+    html+=`<div class="sc-eb">Rotatie ${ri+1}</div>`;
+    html+=rij.map(m=>`<article class="sc-kaart${sleutel.has(m.nr)?" sleutel":""}">
+      <div class="sc-kaart-h"><span>M${m.nr} · ${esc(matchSoort(m.ri,m.mi))}</span>${m.k.ps?'<span class="sc-tag">padelstats</span>':sleutel.has(m.nr)?'<span class="sc-tag warn">sleutelmatch</span>':""}</div>
+      <div class="sc-vs"><div><b>${voornamen(m.a)}</b><small>sterkte ${m.stA}</small></div>
+        <div class="sc-pct" style="color:${kansKleur(m.k.p)}">${pctTxt(m.k.p)}</div>
+        <div class="r"><span>${voornamen(m.b)}</span><small>sterkte ${m.stB}</small></div></div>
+      <div class="sc-balk"><span style="width:${Math.round(m.k.p*100)}%;background:${kansKleur(m.k.p)}"></span></div>
+    </article>`).join("");
+  }
+  return `<div class="sc-kop"><h3>Per match</h3><span class="muted">BTC links · tegenstander rechts</span></div><div class="sc-kaarten">${html}</div>`;
+}
+function scoutDuos(o, ons, tgn, paren){
+  const types=duoTypes();
+  if(!types.some(t=>t[0]===ui.scoutType)) ui.scoutType=types[0][0];
+  const tabs=types.length>1?`<div class="sc-seg" role="tablist" aria-label="Soort match">${types.map(([code,label,g1,g2])=>
+    `<button role="tab" aria-selected="${code===ui.scoutType}" data-st="${code}">${label.replace("dubbel","")}<small>${duosVan(tgn,g1,g2).length}</small></button>`).join("")}</div>`:"";
+  const [code,label,g1,g2]=types.find(t=>t[0]===ui.scoutType);
+  const hun=duosVan(tgn,g1,g2), onze=duosVan(ons,g1,g2);
+  if(!hun.length||!onze.length) return `<div class="sc-kop"><h3>Alle duo's van ${esc(o.tegen)}</h3></div>${tabs}<p class="muted">${!onze.length?"Geen duo van dit type in je selectie.":"Geen duo's van dit type bij de tegenstander."}</p>`;
+  if(!ui.scoutOns) ui.scoutOns={};
+  const keuze=ui.scoutOns[o.match_id+":"+code] || "best";
+  const gekozen=keuze==="best"?null:(onze.find(x=>x.key===keuze)||onze[0]);
+  const rijen=hun.map(t=>{
+    let best=null; onze.forEach(x=>{ const k=duoKans(o,x.ids,t.ids); if(!best||k.p>best.k.p) best={x,k}; });
+    const x=gekozen||best.x, k=gekozen?duoKans(o,gekozen.ids,t.ids):best.k;
+    return {t,x,k};
+  });
+  const groep=(titel,kl,lijst)=>lijst.length?`<div class="sc-eb ${kl}">${titel}</div><div class="sc-lijst">${lijst.map(({t,x,k})=>`
+    <div class="sc-rij"><div><b>${voornamen(t.ids)}</b><small>P${t.k} · sterkte ${t.st}${!gekozen?` · jij: ${voornamen(x.ids)}`:` <span style="color:${kansKleur(k.p)}">${t.st>x.st?"+":"−"}${Math.abs(t.st-x.st)}</span>`}</small></div>
+      <div class="sc-balk"><span style="width:${Math.round(k.p*100)}%;background:${kansKleur(k.p)}"></span></div>
+      <div class="sc-pct s" style="color:${kansKleur(k.p)}">${pctTxt(k.p)}${k.ps?'<small>padelstats</small>':""}</div></div>`).join("")}</div>`:"";
+  const moeilijk=rijen.filter(r=>r.k.p<0.45), open=rijen.filter(r=>r.k.p>=0.45&&r.k.p<0.55), gunstig=rijen.filter(r=>r.k.p>=0.55);
+  const opt=`<option value="best" ${keuze==="best"?"selected":""}>Beste antwoord per duo</option>`+onze.map(x=>`<option value="${x.key}" ${gekozen&&x.key===gekozen.key?"selected":""}>${voornamen(x.ids)} — ${x.st}</option>`).join("");
+  // heatmap: alle combinaties, inklapbaar
+  const inOpst=paren||new Set();
+  const hk=`${code}`; if(!ui.scoutHeat) ui.scoutHeat={};
+  const kolKop=onze.map(x=>`<div class="sc-hk${gekozen&&x.key===gekozen.key?" act":""}">${x.ids.map(id=>{const p=sp(id); const t=String(p?.naam||"?").trim().split(/\s+/); return esc(t.length>1?t[t.length-1]:t[0]);}).join("<br>")}<small>${x.st}</small></div>`).join("");
+  const cellen=hun.map(t=>`<div class="sc-hr"><b>${voornamen(t.ids)}</b><small>${t.st}</small></div>`+onze.map(x=>{ const k=duoKans(o,x.ids,t.ids), v=Math.round(k.p*100);
+    return `<div class="sc-hc h${heatKl(v)}${inOpst.has(x.key+"|"+t.key)?" opst":""}" title="${esc(voornamen(x.ids))} tegen ${esc(voornamen(t.ids))}: ${v}%${k.ps?" (padelstats)":""}">${v}</div>`; }).join("")).join("");
+  const heat=`<details class="sc-heat" data-hk="${hk}" ${ui.scoutHeat[hk]?"open":""}><summary><span>Alle combinaties naast elkaar</span><small>${hun.length} × ${onze.length}</small></summary>
+    <div class="sc-heat-box"><div class="sc-grid" style="grid-template-columns:minmax(118px,1.3fr) repeat(${onze.length},minmax(44px,1fr));min-width:${118+onze.length*48}px"><div></div>${kolKop}${cellen}</div></div>
+    <div class="sc-leg"><span><i class="h1"></i>&lt; 30</span><span><i class="h2"></i>30–45</span><span><i class="h3"></i>45–55</span><span><i class="h4"></i>55–70</span><span><i class="h5"></i>≥ 70</span>${inOpst.size?'<span><i class="opst"></i>in je opstelling</span>':""}</div></details>`;
+  return `<div class="sc-kop"><h3>Alle duo's van ${esc(String(o.tegen||"").replace(/\s*\([^)]*\)\s*$/,""))}</h3></div>${tabs}
+    <div class="sc-picker"><label class="sc-eb muted" for="scoutOns">Jouw duo tegen alle ${hun.length} duo's</label><select id="scoutOns" data-code="${code}">${opt}</select>
+      <div class="sc-chips"><span class="bad">${moeilijk.length} moeilijk</span><span class="warn">${open.length} open</span><span class="ok">${gunstig.length} gunstig</span></div></div>
+    ${groep("Moeilijk · onder 45%","bad",moeilijk)}${groep("Open · 45–55%","warn",open)}${groep("Gunstig · vanaf 55%","ok",gunstig)}${heat}`;
 }
 function renderScout(){
   const v=$("scoutView"); v.classList.add("scout");
@@ -893,37 +1053,28 @@ function renderScout(){
   const ons=onsAlle.filter(p=>!d.afwezig.includes(p.id) && p.k<=r.kmax);
   const tgn=[...tgnMap.values()].filter(p=>!p.k || p.k<=r.kmax);
   const dt=new Date(String(o.datum).replace(" ","T"));
-  const wanneer=isNaN(dt)?"":dt.toLocaleDateString("nl-BE",{weekday:"short",day:"numeric",month:"long"})+" "+dt.toLocaleTimeString("nl-BE",{hour:"2-digit",minute:"2-digit"});
-  let html=`<div class="matchinfo"><span class="tegen">${o.tu==="thuis"?"Thuis tegen":"Uit bij"} ${esc(o.tegen||"?")}</span><span class="muted">${esc(wanneer)} · ${esc(o.ronde||"")}</span>${slot?`<span class="muted">Selectie: ${ons.length} beschikbaar volgens ${esc(SLOT_LABEL[slot])}</span>`:""}</div>`;
+  const wanneer=isNaN(dt)?"":dt.toLocaleDateString("nl-BE",{weekday:"short",day:"numeric",month:"short"})+" · "+dt.toLocaleTimeString("nl-BE",{hour:"2-digit",minute:"2-digit"}).replace(":","u");
+  let html=`<div class="sc-head"><div class="sc-eb">Scouting · ${esc(String(o.ronde||""))}</div><h2>${esc(String(o.tegen||"?").replace(/\s*\([^)]*\)\s*$/,""))}</h2>
+    <div class="muted">${esc(wanneer)} · ${o.tu==="thuis"?"thuis":"uit"} · ${ons.length} spelers beschikbaar${slot?" ("+esc(SLOT_LABEL[slot])+")":""}</div></div>`;
   if(ons.length<2){ v.innerHTML=html+`<p class="muted">Kies eerst je selectie in de spelerslijst (en duid afwezigen aan op de speeldag).</p>`; return; }
-
-  // 1. Sterkste opstelling van beide ploegen op speelsterkte
   const bo=voorstelPool(ons, stS), bt=voorstelPool(tgn, stS);
-  if(bo.opst && bt.opst) html+=ontmoetingTabel(o, bo.opst, bt.opst, "Sterkste tegen sterkste");
-  else html+=`<p class="muted">Geen sterkste opstelling te berekenen: ${esc((bo.fout||bt.fout||""))}</p>`;
-  const plan4=d.opst.slice(0,c.rot);
-  if(bt.opst && plan4.flat(2).filter(x=>x!=null).length===c.rot*4)
-    html+=ontmoetingTabel(o, plan4, bt.opst, `Jouw opstelling (${esc(SLOT_LABEL[slot]||"")}) tegen hun sterkste`);
-
-  // 2. Alle duo's van de tegenstander met een BTC-duo ertegenover
-  for(const [code,label,g1,g2] of duoTypes()){
-    const hun=duosVan(tgn,g1,g2), onze=duosVan(ons,g1,g2);
-    if(!hun.length) continue;
-    const rijen=hun.map(t=>{
-      const sk=o.match_id+":"+code+":"+t.key;
-      const gekozen=onze.find(x=>x.key===ui.scoutKeuze[sk]) || onze[0];
-      const opt=onze.map(x=>`<option value="${x.key}" ${gekozen&&x.key===gekozen.key?"selected":""}>${duoNaam(x.ids)} · ${x.st}</option>`).join("");
-      const k=gekozen?duoKans(o,gekozen.ids,t.ids):null;
-      return `<tr><td>${duoNaam(t.ids)}<br><span class="muted" style="font-size:.78rem">P${t.k} · sterkte ${t.st}</span></td>
-        <td class="n">${k?pkCel(k):"–"}</td>
-        <td>${onze.length?`<select data-sk="${sk}" aria-label="BTC-duo tegen ${esc(duoNaam(t.ids))}">${opt}</select><span class="gekozen">${duoNaam(gekozen.ids)} · ${gekozen.st}</span>`:'<span class="muted">geen duo in de selectie</span>'}</td></tr>`;
-    }).join("");
-    html+=`<h3 style="margin-top:6px">${label} <span class="muted" style="font-family:var(--f-body);font-size:.85rem;font-weight:600">· ${hun.length} duo's van de tegenstander</span></h3>
-      <div class="tablewrap"><table class="duo"><colgroup><col style="width:42%"><col style="width:76px"><col></colgroup><thead><tr><th>Tegenstander</th><th class="n">Kans BTC</th><th>BTC-duo</th></tr></thead><tbody>${rijen}</tbody></table></div>`;
-  }
+  const plan4=d.opst.slice(0,c.rot), planVol=plan4.flat(2).filter(x=>x!=null).length===c.rot*4;
+  if(ui.scoutModus==="plan" && !planVol) ui.scoutModus="sterkst";
+  const modus=ui.scoutModus||"sterkst";
+  html+=`<div class="sc-seg" role="group" aria-label="Vergelijking"><button data-sm="sterkst" aria-pressed="${modus==="sterkst"}">Sterkste vs sterkste</button><button data-sm="plan" aria-pressed="${modus==="plan"}" ${planVol?"":`disabled title="Vul eerst je opstelling in op ${esc(SLOT_LABEL[slot]||"de speeldag")}"`}>Mijn opstelling</button></div>`;
+  const onsOpst = modus==="plan" ? plan4 : bo.opst;
+  let paren=new Set();
+  if(onsOpst && bt.opst){
+    const ms=scoutMatchen(o, onsOpst, bt.opst);
+    const sk=ids=>ids.slice().sort((a,b)=>a-b).join("+");
+    paren=new Set(ms.map(m=>sk(m.a)+"|"+sk(m.b)));
+    const sl=scoutSleutel(ms);
+    html+=`<div class="sc-cols"><div class="sc-links">${scoutHero(ms)}${sl.html}</div><div class="sc-rechts">${scoutKaarten(ms, sl.nrs)}</div></div>`;
+  } else html+=`<p class="muted">Geen opstelling te berekenen: ${esc(bo.fout||bt.fout||"")}</p>`;
+  html+=`<div class="sc-duos">${scoutDuos(o, ons, tgn, paren)}</div>`;
   const bijgewerkt=o.bijgewerkt?new Date(o.bijgewerkt).toLocaleDateString("nl-BE",{day:"numeric",month:"short"}):"";
   const metSchat=[...tgnMap.values(),...ons].some(geschat);
-  html+=`<p class="footnote">Spelers van de tegenstander: wie in hun poule speelde (uitslagenbladen Tennis en Padel Vlaanderen); speelsterkte van padelstats.be${bijgewerkt?`, bijgewerkt ${bijgewerkt}`:""}. Winstkans per duel uit het verschil in speelsterkte, gekalibreerd op simulaties van padelstats.be; ± 5 procentpunt onzeker. "padelstats" = exact dit duel daar gesimuleerd. Standaard staat telkens je sterkste duo uit de selectie tegenover hen; kies een ander duo om te vergelijken. De duo-tabellen houden geen rekening met de puntengrenzen per rotatie; de opstellingen bovenaan wel.${metSchat?" * geen speelsterkte gekend: geschat als klassement plus het gewone verschil binnen de ploeg.":""} Namen van tegenstanders enkel intern, achter de clublogin.</p>`;
+  html+=`<p class="footnote">Kans per duel uit het verschil in speelsterkte (padelstats.be${bijgewerkt?`, bijgewerkt ${bijgewerkt}`:""}), gekalibreerd op simulaties van padelstats, ± 5 procentpunt; "padelstats" = exact dat duel gesimuleerd. Bij een gelijke stand beslissen sets en games; dat telt hier als 50%. De opstellingen houden rekening met de puntengrenzen per rotatie, de duolijst niet.${metSchat?" * geen speelsterkte gekend: geschat als klassement plus het gewone verschil binnen de ploeg.":""} Namen van tegenstanders enkel intern, achter de clublogin.</p>`;
   v.innerHTML=html;
 }
 
@@ -1068,8 +1219,13 @@ $("fases").addEventListener("click",e=>{const b=e.target.closest("[data-fase]");
 $("plist").addEventListener("change",e=>{const v=e.target.dataset.kern; if(v==null) return; if(spelersOpen===null) spelersOpen=true;   // niet dichtklappen terwijl je kiest
   const id=+v, K=plan.kern, i=K.indexOf(id);
   if(e.target.checked&&i<0) K.push(id); if(!e.target.checked&&i>=0) K.splice(i,1); wijziging();});
-$("scoutView").addEventListener("change",e=>{ const s=e.target.closest("select[data-sk]"); if(!s) return;
-  ui.scoutKeuze[s.dataset.sk]=s.value; bewaarUi(); renderScout(); });
+$("scoutView").addEventListener("change",e=>{ const s=e.target.closest("#scoutOns"); if(!s) return;
+  const o=scoutOnt(); if(!o) return; if(!ui.scoutOns) ui.scoutOns={}; ui.scoutOns[o.match_id+":"+s.dataset.code]=s.value; bewaarUi(); renderScout(); });
+$("scoutView").addEventListener("click",e=>{
+  const m=e.target.closest("[data-sm]"); if(m && !m.disabled){ ui.scoutModus=m.dataset.sm; bewaarUi(); renderScout(); return; }
+  const t=e.target.closest("[data-st]"); if(t){ ui.scoutType=t.dataset.st; bewaarUi(); renderScout(); } });
+$("scoutView").addEventListener("toggle",e=>{ const d=e.target; if(!d.matches||!d.matches("details[data-hk]")) return;
+  if(!ui.scoutHeat) ui.scoutHeat={}; ui.scoutHeat[d.dataset.hk]=d.open; bewaarUi(); },true);
 $("tabs").addEventListener("click",e=>{const b=e.target.closest("[data-slot]"); if(!b) return; ui.slot=b.dataset.slot; render(false);});
 $("datum").addEventListener("change",e=>{dag().datum=e.target.value; wijziging();});
 $("tegen").addEventListener("input",e=>{dag().tegen=e.target.value; wijziging(false);});

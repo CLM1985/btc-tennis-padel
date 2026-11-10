@@ -261,6 +261,10 @@ h1::after{content:"";display:block;width:28px;height:3px;background:var(--lime);
 .scout .h4{background:var(--ok-soft);color:var(--ok)}.scout .h5{background:var(--h5);color:var(--h5f)}
 .scout .sc-hc.opst{box-shadow:inset 0 0 0 2px var(--ink)}
 .scout .sc-leg i.h1{background:var(--h1)}.scout .sc-leg i.h2{background:var(--bad-soft)}.scout .sc-leg i.h3{background:var(--warn-soft)}.scout .sc-leg i.h4{background:var(--ok-soft)}.scout .sc-leg i.h5{background:var(--h5)}
+.scout .sc-hist{display:inline-block;font-size:.66rem;font-weight:700;background:var(--bg);color:var(--ink);border-radius:999px;padding:1px 7px;vertical-align:1px;white-space:nowrap}
+.scout .sc-vast{display:flex;flex-direction:column;gap:6px;max-width:640px}
+.scout .sc-vast > div{display:flex;flex-wrap:wrap;gap:6px}
+.scout .sc-vast-i{font-size:.78rem;background:var(--info-soft);border-radius:999px;padding:4px 10px;font-weight:600}
 .scout .sc-leg i.opst{background:var(--bg);box-shadow:inset 0 0 0 2px var(--ink)}
 
 </style>
@@ -947,6 +951,11 @@ function scoutMatchen(o, onsOpst, tgnOpst){
   }
   return uit;
 }
+// Hoe vaak speelde dit duo van de tegenstander samen (uitslagenbladen van hun poule)?
+function duoHist(o, ids){ const k=ids.slice().sort((a,b)=>a-b).join("+");
+  return (o.duos||[]).find(d=>d.ids.slice().sort((a,b)=>a-b).join("+")===k)||null; }
+const histTxt=h=>h?`${h.n}× samen · ${h.w} W`:"";
+const histTag=h=>h?`<span class="sc-hist" title="${h.n} keer samen in hun poule, ${h.w} keer gewonnen">${h.n}× · ${h.w}W</span>`:"";
 const kansKleur=p=>p>=0.55?"var(--ok)":p>=0.45?"var(--warn)":"var(--bad)";
 const heatKl=v=>v<30?1:v<45?2:v<55?3:v<70?4:5;
 function matchSoort(ri,mi){ const c=C();
@@ -997,7 +1006,7 @@ function scoutKaarten(ms, sleutel){
       <div class="sc-kaart-h"><span>M${m.nr} · ${esc(matchSoort(m.ri,m.mi))}</span>${m.k.ps?'<span class="sc-tag">padelstats</span>':sleutel.has(m.nr)?'<span class="sc-tag warn">sleutelmatch</span>':""}</div>
       <div class="sc-vs"><div><b>${voornamen(m.a)}</b><small>sterkte ${m.stA}</small></div>
         <div class="sc-pct" style="color:${kansKleur(m.k.p)}">${pctTxt(m.k.p)}</div>
-        <div class="r"><span>${voornamen(m.b)}</span><small>sterkte ${m.stB}</small></div></div>
+        <div class="r"><span>${voornamen(m.b)}</span><small>sterkte ${m.stB}</small>${duoHist(scoutOnt(),m.b)?`<small>${histTxt(duoHist(scoutOnt(),m.b))}</small>`:""}</div></div>
       <div class="sc-balk"><span style="width:${Math.round(m.k.p*100)}%;background:${kansKleur(m.k.p)}"></span></div>
     </article>`).join("");
   }
@@ -1020,7 +1029,7 @@ function scoutDuos(o, ons, tgn, paren){
     return {t,x,k};
   });
   const groep=(titel,kl,lijst)=>lijst.length?`<div class="sc-eb ${kl}">${titel}</div><div class="sc-lijst">${lijst.map(({t,x,k})=>`
-    <div class="sc-rij"><div><b>${voornamen(t.ids)}</b><small>P${t.k} · sterkte ${t.st}${!gekozen?` · jij: ${voornamen(x.ids)}`:` <span style="color:${kansKleur(k.p)}">${t.st>x.st?"+":"−"}${Math.abs(t.st-x.st)}</span>`}</small></div>
+    <div class="sc-rij"><div><b>${voornamen(t.ids)}</b> ${histTag(duoHist(o,t.ids))}<small>P${t.k} · sterkte ${t.st}${!gekozen?` · jij: ${voornamen(x.ids)}`:` <span style="color:${kansKleur(k.p)}">${t.st>x.st?"+":"−"}${Math.abs(t.st-x.st)}</span>`}</small></div>
       <div class="sc-balk"><span style="width:${Math.round(k.p*100)}%;background:${kansKleur(k.p)}"></span></div>
       <div class="sc-pct s" style="color:${kansKleur(k.p)}">${pctTxt(k.p)}${k.ps?'<small>padelstats</small>':""}</div></div>`).join("")}</div>`:"";
   const moeilijk=rijen.filter(r=>r.k.p<0.45), open=rijen.filter(r=>r.k.p>=0.45&&r.k.p<0.55), gunstig=rijen.filter(r=>r.k.p>=0.55);
@@ -1029,12 +1038,15 @@ function scoutDuos(o, ons, tgn, paren){
   const inOpst=paren||new Set();
   const hk=`${code}`; if(!ui.scoutHeat) ui.scoutHeat={};
   const kolKop=onze.map(x=>`<div class="sc-hk${gekozen&&x.key===gekozen.key?" act":""}">${x.ids.map(id=>{const p=sp(id); const t=String(p?.naam||"?").trim().split(/\s+/); return esc(t.length>1?t[t.length-1]:t[0]);}).join("<br>")}<small>${x.st}</small></div>`).join("");
-  const cellen=hun.map(t=>`<div class="sc-hr"><b>${voornamen(t.ids)}</b><small>${t.st}</small></div>`+onze.map(x=>{ const k=duoKans(o,x.ids,t.ids), v=Math.round(k.p*100);
+  const cellen=hun.map(t=>`<div class="sc-hr"><b>${voornamen(t.ids)}</b><small>${t.st}${duoHist(o,t.ids)?" · "+duoHist(o,t.ids).n+"×":""}</small></div>`+onze.map(x=>{ const k=duoKans(o,x.ids,t.ids), v=Math.round(k.p*100);
     return `<div class="sc-hc h${heatKl(v)}${inOpst.has(x.key+"|"+t.key)?" opst":""}" title="${esc(voornamen(x.ids))} tegen ${esc(voornamen(t.ids))}: ${v}%${k.ps?" (padelstats)":""}">${v}</div>`; }).join("")).join("");
   const heat=`<details class="sc-heat" data-hk="${hk}" ${ui.scoutHeat[hk]?"open":""}><summary><span>Alle combinaties naast elkaar</span><small>${hun.length} × ${onze.length}</small></summary>
     <div class="sc-heat-box"><div class="sc-grid" style="grid-template-columns:minmax(118px,1.3fr) repeat(${onze.length},minmax(44px,1fr));min-width:${118+onze.length*48}px"><div></div>${kolKop}${cellen}</div></div>
     <div class="sc-leg"><span><i class="h1"></i>&lt; 30</span><span><i class="h2"></i>30–45</span><span><i class="h3"></i>45–55</span><span><i class="h4"></i>55–70</span><span><i class="h5"></i>≥ 70</span>${inOpst.size?'<span><i class="opst"></i>in je opstelling</span>':""}</div></details>`;
-  return `<div class="sc-kop"><h3>Alle duo's van ${esc(String(o.tegen||"").replace(/\s*\([^)]*\)\s*$/,""))}</h3></div>${tabs}
+  const vast=hun.map(t=>({t,h:duoHist(o,t.ids)})).filter(x=>x.h).sort((a,b)=>b.h.n-a.h.n||b.h.w-a.h.w);
+  const vastHtml=vast.length?`<div class="sc-vast"><span class="sc-eb muted">Vaak samen in hun poule</span><div>${vast.map(({t,h})=>`<span class="sc-vast-i"><b>${voornamen(t.ids)}</b> ${h.n}× · ${h.w} W</span>`).join("")}</div></div>`
+    :`<div class="sc-vast"><span class="sc-eb muted">Vaak samen in hun poule</span><div><span class="muted" style="font-size:.8rem">Geen duo van dit type gespeeld.</span></div></div>`;
+  return `<div class="sc-kop"><h3>Alle duo's van ${esc(String(o.tegen||"").replace(/\s*\([^)]*\)\s*$/,""))}</h3></div>${tabs}${(o.duos||[]).length?vastHtml:""}
     <div class="sc-picker"><label class="sc-eb muted" for="scoutOns">Jouw duo tegen alle ${hun.length} duo's</label><select id="scoutOns" data-code="${code}">${opt}</select>
       <div class="sc-chips"><span class="bad">${moeilijk.length} moeilijk</span><span class="warn">${open.length} open</span><span class="ok">${gunstig.length} gunstig</span></div></div>
     ${groep("Moeilijk · onder 45%","bad",moeilijk)}${groep("Open · 45–55%","warn",open)}${groep("Gunstig · vanaf 55%","ok",gunstig)}${heat}`;
@@ -1074,7 +1086,7 @@ function renderScout(){
   html+=`<div class="sc-duos">${scoutDuos(o, ons, tgn, paren)}</div>`;
   const bijgewerkt=o.bijgewerkt?new Date(o.bijgewerkt).toLocaleDateString("nl-BE",{day:"numeric",month:"short"}):"";
   const metSchat=[...tgnMap.values(),...ons].some(geschat);
-  html+=`<p class="footnote">Kans per duel uit het verschil in speelsterkte (padelstats.be${bijgewerkt?`, bijgewerkt ${bijgewerkt}`:""}), gekalibreerd op simulaties van padelstats, ± 5 procentpunt; "padelstats" = exact dat duel gesimuleerd. Bij een gelijke stand beslissen sets en games; dat telt hier als 50%. De opstellingen houden rekening met de puntengrenzen per rotatie, de duolijst niet.${metSchat?" * geen speelsterkte gekend: geschat als klassement plus het gewone verschil binnen de ploeg.":""} Namen van tegenstanders enkel intern, achter de clublogin.</p>`;
+  html+=`<p class="footnote">Kans per duel uit het verschil in speelsterkte (padelstats.be${bijgewerkt?`, bijgewerkt ${bijgewerkt}`:""}), gekalibreerd op simulaties van padelstats, ± 5 procentpunt; "padelstats" = exact dat duel gesimuleerd. Bij een gelijke stand beslissen sets en games; dat telt hier als 50%. De opstellingen houden rekening met de puntengrenzen per rotatie, de duolijst niet.${metSchat?" * geen speelsterkte gekend: geschat als klassement plus het gewone verschil binnen de ploeg.":""} "2× · 1W" = 2 keer samen gespeeld in hun poule, 1 keer gewonnen. Namen van tegenstanders enkel intern, achter de clublogin.</p>`;
   v.innerHTML=html;
 }
 

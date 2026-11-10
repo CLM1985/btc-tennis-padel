@@ -110,3 +110,12 @@ Privacy: `ladder_mijn` registreert enkel de actieve dag per speler (opvolging la
 - **Overzicht** (commissie, bestuur): alle inschrijvingen (app en publiek formulier), status, betaalstatus en interne notitie zetten (gelogd), CSV-export.
 - Functies: `club_ic_data`, `club_ic_zoek_lid`, `club_ic_inschrijven`, `club_ic_kalender`, `club_ic_overzicht`, `club_ic_status`; `club_mij.onderdelen.interclub`.
 - De link op de startpagina verschijnt pas na het uitvoeren van het SQL-script (`club_mij` met `interclub`).
+
+## Gebruik van de app (`beheer/` → tabblad Gebruik, enkel beheerders)
+- Doel: opvolgen hoe de app gebruikt wordt (geen beveiligingslogboek).
+- `toegang.js` meldt elk paginabezoek en de eerste klik op elk tabblad via `club_bezoek(p_token, p_pagina, p_onderdeel, p_apparaat)`;
+  `club_login` telt gelukte aanmeldingen. Niet in de voorbeeldmodus.
+- Opslag `club.gebruik`: per dag, lid, pagina, tabblad en gsm/computer één teller. Geen IP, geen uur, geen inhoud. Na 12 maanden gewist.
+- Rapport `club_beheer_gebruik(p_token, p_van, p_tot)`: kerncijfers met vergelijking tegenover de vorige periode, actieve leden per dag,
+  meest gebruikte pagina's en tabbladen, weekdag, gsm/computer, bereik per rol, leden en niet-actieve leden.
+- Script: `sql/01_Governance_Clublogin_gebruik.sql`.

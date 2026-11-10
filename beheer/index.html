@@ -87,6 +87,22 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 @media (max-width:560px){.who > div{justify-items:start}}
 
 /* ---- Gebruik (10/11/2026) ---- */
+.g-filter{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--lime);border-radius:14px;padding:12px 16px}
+.g-filter .wie{display:grid;gap:2px}
+.g-filter .wie b{font:800 20px var(--display);color:var(--title);text-transform:uppercase;letter-spacing:.02em}
+.g-filter .wie span{font-size:13px;color:var(--muted)}
+.g-filter .rollen{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;border-radius:999px;padding:2px 10px;background:var(--soft);color:var(--accent)}
+.g-filter .sluit{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font:600 13px var(--body);border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:7px 12px;border-radius:999px;cursor:pointer}
+.g-filter .sluit:hover{background:var(--bg)}
+#v-gebruik tr.kies{cursor:pointer}
+#v-gebruik tr.kies:hover td,#v-gebruik tr.kies:focus-visible td{background:var(--bg)}
+#v-gebruik tr.kies:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+#v-gebruik tr.kies td:first-child{font-weight:600;color:var(--accent)}
+#v-gebruik tr.kies td:first-child::after{content:" ›";color:var(--muted);font-weight:400}
+#v-gebruik tr.gekozen td{background:var(--soft)}
+#v-gebruik tr.gekozen td:first-child::after{content:" ✓";color:var(--accent)}
+.g-hint{font-size:12px;color:var(--muted)}
 .g-kop{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
 .g-kop p{margin:4px 0 0}
 .seg{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
@@ -203,6 +219,7 @@ details.tabel > summary{font-size:13px;color:var(--accent);font-weight:600;curso
         </div>
       </div>
       <div id="gFout"></div>
+      <div class="g-filter" id="gFilter" hidden aria-live="polite"></div>
       <div class="kpis" id="gKpi"></div>
 
       <section class="card" aria-labelledby="gDagT">
@@ -212,7 +229,7 @@ details.tabel > summary{font-size:13px;color:var(--accent);font-weight:600;curso
       </section>
 
       <section class="card" aria-labelledby="gPagT">
-        <div class="kaartkop"><h3 class="h3" id="gPagT">Meest gebruikte pagina's</h3><span class="msg">bezoeken · leden · tegenover vorige periode</span></div>
+        <div class="kaartkop"><h3 class="h3" id="gPagT">Meest gebruikte pagina's</h3><span class="msg" id="gPagSub">bezoeken · leden · tegenover vorige periode</span></div>
         <ol class="rang" id="gPaginas"></ol>
       </section>
 
@@ -227,7 +244,7 @@ details.tabel > summary{font-size:13px;color:var(--accent);font-weight:600;curso
         </section>
       </div>
 
-      <section class="card" aria-labelledby="gRolT">
+      <section class="card" aria-labelledby="gRolT" id="gRolKaart">
         <div class="kaartkop"><h3 class="h3" id="gRolT">Bereik per rol</h3><span class="msg">actief in de periode / leden met een code</span></div>
         <div id="gRollen"></div>
       </section>
@@ -235,6 +252,7 @@ details.tabel > summary{font-size:13px;color:var(--accent);font-weight:600;curso
       <section class="card" aria-labelledby="gLidT">
         <div class="kaartkop"><h3 class="h3" id="gLidT">Leden</h3>
           <div class="zoekrij"><input id="gZoek" type="search" placeholder="Zoek op naam" aria-label="Zoek een lid"><span class="msg" id="gLidTeller"></span></div></div>
+        <p class="g-hint" id="gHint">Klik op een naam om het rapport voor dat lid te bekijken.</p>
         <div class="tbl" id="gLeden"></div>
         <details class="tabel"><summary id="gNietSum">Niet actief in de periode</summary><div class="tbl" id="gNiet"></div></details>
       </section>
@@ -399,7 +417,7 @@ const PAGINA = { start: "Mijn padel (start)", lessen: "Padellessen", interclub: 
   commissie: "Commissie", beheer: "Toegang beheer" };
 const ROLNAAM = { lid: "Alle leden", kapitein: "Kapiteins", trainer: "Trainers", hoofdcoach: "Hoofdcoach", commissie: "Commissie", bestuur: "Bestuur", wedstrijdleider: "Wedstrijdleiders", beheerder: "Beheerders" };
 const WDAG = ["ma", "di", "wo", "do", "vr", "za", "zo"];
-let G = null, GDAGEN = 30;
+let G = null, G0 = null, GDAGEN = 30, GLID = null, GVOLG = 0;
 const nl = (v, d) => Number(v || 0).toLocaleString("nl-BE", { maximumFractionDigits: d || 0 });
 const dIso = (x) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
 const dTekst = (s, opt) => new Date(s + (s.length === 10 ? "T12:00" : "")).toLocaleDateString("nl-BE", opt || { day: "numeric", month: "short" });
@@ -416,19 +434,42 @@ function delta(nu, vorig) {
 }
 async function gebruik() {
   $("gFout").innerHTML = "";
-  const tot = new Date(), van = new Date(); van.setDate(van.getDate() - (GDAGEN - 1));
-  let r;
-  try { r = await rpc("club_beheer_gebruik", { p_token: token, p_van: dIso(van), p_tot: dIso(tot) }); }
-  catch (err) { $("gFout").innerHTML = `<div class="leeg">Het gebruiksrapport is nog niet geactiveerd in de database.</div>`; $("gPeriode").textContent = ""; return; }
-  if (r.fout) { $("gFout").innerHTML = `<p class="err">${esc(r.fout)}</p>`; return; }
-  G = r; tekenGebruik();
+  const volg = ++GVOLG, tot = new Date(), van = new Date(); van.setDate(van.getDate() - (GDAGEN - 1));
+  const basis = { p_token: token, p_van: dIso(van), p_tot: dIso(tot) };
+  let alle, lid = null;
+  try {
+    [alle, lid] = await Promise.all([rpc("club_beheer_gebruik", basis),
+      GLID ? rpc("club_beheer_gebruik", { ...basis, p_speler: GLID }).catch(() => ({ fout: "per lid" })) : Promise.resolve(null)]);
+  } catch (err) { $("gFout").innerHTML = `<div class="leeg">Het gebruiksrapport is nog niet geactiveerd in de database.</div>`; $("gPeriode").textContent = ""; return; }
+  if (volg !== GVOLG) return;   // een recentere keuze is al onderweg
+  if (alle.fout) { $("gFout").innerHTML = `<p class="err">${esc(alle.fout)}</p>`; return; }
+  if (lid && lid.fout) { GLID = null; lid = null; $("gFout").innerHTML = `<div class="leeg">Het rapport per lid is nog niet geactiveerd in de database (script 01_Governance_Clublogin_gebruik_lid.sql).</div>`; }
+  G0 = alle; G = lid || alle; tekenGebruik();
+}
+function kiesLid(id) {
+  GLID = GLID === id || !id ? null : id;
+  const s = $("v-gebruik"); if (s.getBoundingClientRect().top < 0) s.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (G0) tekenLeden2();   // selectie meteen tonen
+  gebruik();
 }
 $("gSeg").addEventListener("click", (e) => {
   const b = e.target.closest("[data-d]"); if (!b) return;
   GDAGEN = +b.dataset.d; $("gSeg").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
   gebruik();
 });
+function tekenFilter() {
+  const L = GLID && G.lid, el = $("gFilter");
+  el.hidden = !L; $("gRolKaart").hidden = !!L;
+  if (!L) { el.innerHTML = ""; return; }
+  const rol = (L.rollen || []).map((r) => `<span class="chip">${esc((ROLNAAM[r] || r).replace(/s$/, "").replace(/^Alle leden$/, "lid"))}</span>`).join("");
+  el.innerHTML = `<div class="wie"><b>${esc(L.naam)}</b><span>${L.laatst_actief ? "laatst actief " + geleden(L.laatst_actief) + " · eerst gezien " + dTekst(dIso(new Date(L.eerst_actief)), { day: "numeric", month: "long" }) : "nog niet actief sinds de start van de meting"}</span></div>
+    ${rol ? `<div class="rollen">${rol}</div>` : ""}
+    <button type="button" class="sluit" id="gWis" aria-label="Filter op ${esc(L.naam)} wissen">✕ Alle leden</button>`;
+  $("gWis").addEventListener("click", () => kiesLid(null));
+}
 function tekenGebruik() {
+  tekenFilter();
+  if (GLID && G.lid) return tekenLidRapport();
   const k = G.kpi;
   $("gPeriode").textContent = `${dTekst(G.van, { day: "numeric", month: "long" })} – ${dTekst(G.tot, { day: "numeric", month: "long", year: "numeric" })} · vergeleken met de ${G.dagen} dagen ervoor`
     + (G.eerste_meting && G.eerste_meting > G.van ? ` · meting loopt sinds ${dTekst(G.eerste_meting, { day: "numeric", month: "long" })}` : "");
@@ -446,6 +487,22 @@ function tekenGebruik() {
     `<div class="kpi"><span class="lbl">Nog nooit gebruikt</span><span class="w">${nl(k.nooit)}</span><span class="sub">leden met een code, sinds de start van de meting</span></div>`,
   ].join("");
   tekenDag(); tekenPaginas(); tekenWeekdag(); tekenApparaat(); tekenRollen(); tekenLeden2();
+}
+function tekenLidRapport() {
+  const k = G.kpi, L = G.lid, P = G.paginas || [], A = (G.apparaat || []).filter((a) => a.bezoeken), atot = A.reduce((s, a) => s + a.bezoeken, 0);
+  $("gPeriode").textContent = `${dTekst(G.van, { day: "numeric", month: "long" })} – ${dTekst(G.tot, { day: "numeric", month: "long", year: "numeric" })} · vergeleken met de ${G.dagen} dagen ervoor`;
+  const top = P[0], gsm = A.find((a) => a.apparaat === "gsm");
+  $("gKpi").innerHTML = [
+    `<div class="kpi hoofd"><span class="lbl">Paginabezoeken</span><span class="w">${nl(k.bezoeken)}</span>${delta(k.bezoeken, k.bezoeken_vorig)}
+      <span class="sub">${L.actieve_dagen ? nl(k.bezoeken / L.actieve_dagen, 1) + " per actieve dag" : "geen bezoeken in de periode"}</span></div>`,
+    `<div class="kpi"><span class="lbl">Actieve dagen</span><span class="w">${nl(L.actieve_dagen)}<small>/ ${nl(G.dagen)}</small></span>
+      <div class="meter" role="img" aria-label="${Math.round(100 * L.actieve_dagen / G.dagen)}% van de dagen"><i style="width:${Math.round(100 * L.actieve_dagen / G.dagen)}%"></i></div><span class="sub">dagen dat de app geopend werd</span></div>`,
+    `<div class="kpi"><span class="lbl">Laatst actief</span><span class="w" style="font-size:26px">${esc(geleden(L.laatst_actief))}</span><span class="sub">${L.laatst_actief ? new Date(L.laatst_actief).toLocaleString("nl-BE", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "–"}</span></div>`,
+    `<div class="kpi"><span class="lbl">Meest gebruikt</span><span class="w" style="font-size:22px;line-height:1.15">${top ? esc(PAGINA[top.pagina] || top.pagina) : "–"}</span><span class="sub">${top ? `${nl(top.bezoeken)} van ${nl(k.bezoeken)} bezoeken` : "geen bezoeken"}</span></div>`,
+    `<div class="kpi"><span class="lbl">Aanmeldingen</span><span class="w">${nl(k.aanmeldingen)}</span><span class="sub">in de periode · ${nl(L.aanmeldingen_totaal)} sinds de start</span></div>`,
+    `<div class="kpi"><span class="lbl">Toestel</span><span class="w" style="font-size:26px">${atot ? (gsm && gsm.bezoeken / atot >= .5 ? "Gsm" : "Computer") : "–"}</span><span class="sub">${atot ? `${Math.round(100 * (gsm ? gsm.bezoeken : 0) / atot)}% van de bezoeken op gsm of tablet` : "geen bezoeken"}</span></div>`,
+  ].join("");
+  tekenDag(); tekenPaginas(); tekenWeekdag(); tekenApparaat(); tekenLeden2();
 }
 /* staafgrafiek: één reeks, staven met afgeronde top op de basislijn, 2px tussenruimte, hover-tip */
 const GROOTTE = new Map();
@@ -481,32 +538,34 @@ function staven(el, punten, opt) {
   s.addEventListener("click", (e) => toon(e.target.closest("g[data-i]")));
 }
 function tekenDag() {
-  let pt = G.per_dag.map((d) => ({ as: dTekst(d.dag, { day: "numeric", month: "numeric" }), w: d.leden, b: d.bezoeken, van: d.dag, tot: d.dag }));
+  const een = !!(GLID && G.lid);
+  let pt = G.per_dag.map((d) => ({ as: dTekst(d.dag, { day: "numeric", month: "numeric" }), w: een ? d.bezoeken : d.leden, b: d.bezoeken, van: d.dag, tot: d.dag }));
   let eenheid = "dag";
   if (pt.length > 92) {   // 12 maanden: per week
     eenheid = "week"; const wk = [];
-    G.per_dag.forEach((d, i) => { if (i % 7 === 0) wk.push({ van: d.dag, tot: d.dag, w: 0, b: 0, as: dTekst(d.dag, { day: "numeric", month: "short" }) }); const x = wk[wk.length - 1]; x.tot = d.dag; x.w = Math.max(x.w, d.leden); x.b += d.bezoeken; });
+    G.per_dag.forEach((d, i) => { if (i % 7 === 0) wk.push({ van: d.dag, tot: d.dag, w: 0, b: 0, as: dTekst(d.dag, { day: "numeric", month: "short" }) }); const x = wk[wk.length - 1]; x.tot = d.dag; x.w = een ? x.w + d.bezoeken : Math.max(x.w, d.leden); x.b += d.bezoeken; });
     pt = wk;
   }
-  $("gDagT").textContent = eenheid === "week" ? "Actieve leden per week" : "Actieve leden per dag";
-  $("gDagSub").textContent = eenheid === "week" ? "hoogste aantal leden op één dag in die week" : "verschillende leden die de app openden";
+  $("gDagT").textContent = een ? (eenheid === "week" ? "Bezoeken per week" : "Bezoeken per dag") : (eenheid === "week" ? "Actieve leden per week" : "Actieve leden per dag");
+  $("gDagSub").textContent = een ? `paginabezoeken van ${G.lid.naam}` : eenheid === "week" ? "hoogste aantal leden op één dag in die week" : "verschillende leden die de app openden";
   if (!G.per_dag.some((d) => d.bezoeken)) { $("gDag").innerHTML = `<div class="leeg">Nog geen bezoeken in deze periode.</div>`; $("gDagTabel").innerHTML = ""; return; }
   staven($("gDag"), pt, { label: $("gDagT").textContent, labels: eenheid === "week" ? 9 : (pt.length <= 10 ? pt.length : 8),
-    tip: (p) => `<b>${p.van === p.tot ? dTekst(p.van, { weekday: "short", day: "numeric", month: "short" }) : "week van " + dTekst(p.van)}</b><br>${nl(p.w)} ${p.w === 1 ? "lid" : "leden"} · ${nl(p.b)} bezoeken` });
-  $("gDagTabel").innerHTML = `<table><thead><tr><th>${eenheid === "week" ? "Week van" : "Dag"}</th><th class="num">Actieve leden</th><th class="num">Bezoeken</th></tr></thead><tbody>${pt.filter((p) => p.b).reverse().map((p) =>
-    `<tr><td>${dTekst(p.van, { weekday: "short", day: "numeric", month: "short" })}</td><td class="num">${p.w}</td><td class="num">${p.b}</td></tr>`).join("")}</tbody></table>`;
+    tip: (p) => `<b>${p.van === p.tot ? dTekst(p.van, { weekday: "short", day: "numeric", month: "short" }) : "week van " + dTekst(p.van)}</b><br>${een ? `${nl(p.b)} ${p.b === 1 ? "bezoek" : "bezoeken"}` : `${nl(p.w)} ${p.w === 1 ? "lid" : "leden"} · ${nl(p.b)} bezoeken`}` });
+  $("gDagTabel").innerHTML = `<table><thead><tr><th>${eenheid === "week" ? "Week van" : "Dag"}</th>${een ? "" : '<th class="num">Actieve leden</th>'}<th class="num">Bezoeken</th></tr></thead><tbody>${pt.filter((p) => p.b).reverse().map((p) =>
+    `<tr><td>${dTekst(p.van, { weekday: "short", day: "numeric", month: "short" })}</td>${een ? "" : `<td class="num">${p.w}</td>`}<td class="num">${p.b}</td></tr>`).join("")}</tbody></table>`;
 }
 function tekenPaginas() {
   const P = G.paginas || [];
+  $("gPagSub").textContent = GLID ? "bezoeken · aandeel · tegenover vorige periode" : "bezoeken · leden · tegenover vorige periode";
   if (!P.length) { $("gPaginas").innerHTML = `<li class="leeg">Nog geen bezoeken in deze periode.</li>`; return; }
   const max = Math.max(...P.map((p) => p.bezoeken)), tot = P.reduce((a, p) => a + p.bezoeken, 0);
   $("gPaginas").innerHTML = P.map((p) => {
     const nm = PAGINA[p.pagina] || p.pagina, sub = p.onderdelen || [], smax = Math.max(1, ...sub.map((o) => o.bezoeken));
     return `<li><div class="rij" title="${esc(nm)}: ${p.bezoeken} bezoeken door ${p.leden} ${p.leden === 1 ? "lid" : "leden"}">
       <span class="nm">${esc(nm)}</span><span class="spoor"><i style="width:${(100 * p.bezoeken / max).toFixed(1)}%"></i></span>
-      <span class="cijf"><b>${nl(p.bezoeken)}</b> · ${nl(p.leden)} ${p.leden === 1 ? "lid" : "leden"} · ${Math.round(100 * p.bezoeken / tot)}% ${delta(p.bezoeken, p.vorig)}</span></div>
+      <span class="cijf"><b>${nl(p.bezoeken)}</b>${GLID ? "" : ` · ${nl(p.leden)} ${p.leden === 1 ? "lid" : "leden"}`} · ${Math.round(100 * p.bezoeken / tot)}% ${delta(p.bezoeken, p.vorig)}</span></div>
       ${sub.length ? `<details><summary>${sub.length} ${sub.length === 1 ? "tabblad" : "tabbladen"}</summary>${sub.map((o) => `<div class="subrij"><span>${esc(o.onderdeel)}</span>
-        <span class="spoor"><i style="width:${(100 * o.bezoeken / smax).toFixed(1)}%"></i></span><span class="cijf">${nl(o.bezoeken)} · ${nl(o.leden)} ${o.leden === 1 ? "lid" : "leden"}</span></div>`).join("")}</details>` : ""}</li>`;
+        <span class="spoor"><i style="width:${(100 * o.bezoeken / smax).toFixed(1)}%"></i></span><span class="cijf">${nl(o.bezoeken)}${GLID ? "" : ` · ${nl(o.leden)} ${o.leden === 1 ? "lid" : "leden"}`}</span></div>`).join("")}</details>` : ""}</li>`;
   }).join("");
 }
 function tekenWeekdag() {
@@ -531,16 +590,27 @@ function tekenRollen() {
       <span class="cijf"><b>${nl(r.actief)}</b> / ${nl(r.met_code)} · ${p}%</span></div></li>`; }).join("")}</ol>` : `<div class="leeg">Nog geen leden met een code.</div>`;
 }
 function tekenLeden2() {
-  const q = $("gZoek").value.trim().toLowerCase(), L = (G.leden || []).filter((l) => !q || (l.naam || "").toLowerCase().includes(q));
-  $("gLidTeller").textContent = `${(G.leden || []).length} actief`;
+  const B = G0 || G, q = $("gZoek").value.trim().toLowerCase(), kan = (B.leden || []).some((l) => l.speler_id);
+  const rij = (l, cellen) => l.speler_id
+    ? `<tr class="kies${GLID === l.speler_id ? " gekozen" : ""}" tabindex="0" data-lid="${l.speler_id}" aria-pressed="${GLID === l.speler_id}" aria-label="Rapport voor ${esc(l.naam)}">${cellen}</tr>`
+    : `<tr>${cellen}</tr>`;
+  const L = (B.leden || []).filter((l) => !q || (l.naam || "").toLowerCase().includes(q));
+  $("gHint").hidden = !kan;
+  $("gHint").textContent = GLID ? "Klik op een andere naam om te wisselen, of nog eens op dezelfde naam om terug alle leden te zien." : "Klik op een naam om het rapport voor dat lid te bekijken.";
+  $("gLidTeller").textContent = `${(B.leden || []).length} actief`;
   $("gLeden").innerHTML = L.length ? `<table><thead><tr><th>Lid</th><th>Laatst actief</th><th class="num">Dagen</th><th class="num">Bezoeken</th><th>Meest gebruikt</th></tr></thead><tbody>${L.map((l) =>
-    `<tr><td>${esc(l.naam)}</td><td>${geleden(l.laatst)}</td><td class="num">${l.dagen}</td><td class="num">${l.bezoeken}</td><td>${esc(PAGINA[l.pagina] || l.pagina || "–")}</td></tr>`).join("")}</tbody></table>`
+    rij(l, `<td>${esc(l.naam)}</td><td>${geleden(l.laatst)}</td><td class="num">${l.dagen}</td><td class="num">${l.bezoeken}</td><td>${esc(PAGINA[l.pagina] || l.pagina || "–")}</td>`)).join("")}</tbody></table>`
     : `<div class="leeg">${q ? "Geen actief lid met die naam." : "Nog niemand actief in deze periode."}</div>`;
-  const N = (G.niet_actief || []).filter((l) => !q || (l.naam || "").toLowerCase().includes(q));
-  $("gNietSum").textContent = `Niet actief in de periode (${(G.niet_actief || []).length} leden met een code)`;
-  $("gNiet").innerHTML = N.length ? `<table><thead><tr><th>Lid</th><th>Laatst actief</th></tr></thead><tbody>${N.map((l) => `<tr><td>${esc(l.naam)}</td><td>${geleden(l.laatst)}</td></tr>`).join("")}</tbody></table>` : `<p class="msg">Iedereen met een code was actief.</p>`;
+  const N = (B.niet_actief || []).filter((l) => !q || (l.naam || "").toLowerCase().includes(q));
+  $("gNietSum").textContent = `Niet actief in de periode (${(B.niet_actief || []).length} leden met een code)`;
+  $("gNiet").innerHTML = N.length ? `<table><thead><tr><th>Lid</th><th>Laatst actief</th></tr></thead><tbody>${N.map((l) => rij(l, `<td>${esc(l.naam)}</td><td>${geleden(l.laatst)}</td>`)).join("")}</tbody></table>` : `<p class="msg">Iedereen met een code was actief.</p>`;
 }
 $("gZoek").addEventListener("input", () => { if (G) tekenLeden2(); });
+["gLeden", "gNiet"].forEach((id) => {
+  $(id).addEventListener("click", (e) => { const tr = e.target.closest("tr[data-lid]"); if (tr) kiesLid(+tr.dataset.lid); });
+  $(id).addEventListener("keydown", (e) => { const tr = e.target.closest("tr[data-lid]"); if (tr && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); kiesLid(+tr.dataset.lid); } });
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && GLID && !$("v-gebruik").hidden) kiesLid(null); });
 
 start().catch(err => { $("login").hidden = false; $("loginErr").textContent = err.message; });
 </script>

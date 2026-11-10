@@ -118,4 +118,5 @@ Privacy: `ladder_mijn` registreert enkel de actieve dag per speler (opvolging la
 - Opslag `club.gebruik`: per dag, lid, pagina, tabblad en gsm/computer één teller. Geen IP, geen uur, geen inhoud. Na 12 maanden gewist.
 - Rapport `club_beheer_gebruik(p_token, p_van, p_tot)`: kerncijfers met vergelijking tegenover de vorige periode, actieve leden per dag,
   meest gebruikte pagina's en tabbladen, weekdag, gsm/computer, bereik per rol, leden en niet-actieve leden.
-- Script: `sql/01_Governance_Clublogin_gebruik.sql`.
+- Per lid: klik op een naam in de ledenlijst → hetzelfde rapport voor dat lid (`p_speler`); Esc of "Alle leden" wist de filter.
+- Scripts: `sql/01_Governance_Clublogin_gebruik.sql` (volledig) en `sql/01_Governance_Clublogin_gebruik_lid.sql` (enkel de uitbreiding per lid).

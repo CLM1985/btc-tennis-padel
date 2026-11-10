@@ -9,3 +9,7 @@ create schema if not exists scouting;            -- geen rechten voor anon/authe
 -- public.club_planner_scouting(p_token, p_ploeg) -> {ontmoetingen:[{match_id, datum, ronde, tegen, tu, spelers[], metingen[]}]}
 --   enkel voor wie de ploeg mag zien in de planner (club.planner_ploegen), enkel ontmoetingen die nog gespeeld moeten worden.
 --   Spelers van de tegenstander krijgen een negatieve id (-lidnummer) zodat ze nooit botsen met eigen leden.
+
+-- 10/11/2026 (migratie scouting_duos): scouting.tegenstander_duos(match_id, speler_1, speler_2, samen, gewonnen, bron, wissen_na)
+--   = hoe vaak een duo van de tegenstander samen speelde in hun poule en hoeveel keer het won (uit de uitslagenbladen).
+--   club_planner_scouting geeft dit terug als 'duos': [{ids:[-lid,-lid], n, w}]; opruimen() wist ook deze tabel.

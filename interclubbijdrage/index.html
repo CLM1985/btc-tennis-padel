@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<script src="../thema.js"></script>
+<script src="../toegang.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#152B46">
+<link rel="icon" type="image/png" sizes="48x48" href="../app/favicon-48.png">
+<link rel="apple-touch-icon" href="../app/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="BTC Padel">
+<script>if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("../sw.js",{scope:"../"}).catch(function(){})});</script>
+<meta name="robots" content="noindex">
+<title>Interclubbijdrage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@700;800&family=Montserrat:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: bedieningskolom (padelkaart) naast de uitkomst; de bijdrage-schuif toont zelf het break-evenpunt.
+   Huisstijl BTC: licht, geen wit, navy en clubgroen dragen tekst, lime enkel als klein accent. Donker volgt de app (thema.js). */
+:root{
+  --bg:#F3F1E9; --paneel:#DFE7EE; --vlak:#F3F1E9; --salie:#DCE4D2; --ink:#152B46; --accent:#435B28; --op-accent:#F3F1E9;
+  --muted:#5B6A57; --lijn:#C9D3DC; --lijn-zacht:#E6E9E2; --lime:#C5E75A; --dot:#C5E75A; --les:#8AA06B;
+  /* tokens die toegang.js (zijbalk) gebruikt */
+  --surface:#DFE7EE; --line:#C9D3DC; --fg:#152B46; --band:#DFE7EE;
+  --titel:"League Spartan","Arial Narrow",Arial,sans-serif;
+  --tekst:"Montserrat","Segoe UI",Helvetica,Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1A2A; --paneel:#15263B; --vlak:#112033; --salie:#1F3324; --ink:#F3F1E9; --accent:#C5E75A; --op-accent:#152B46;
+  --muted:#A3B1C1; --lijn:#2A3D55; --lijn-zacht:#1F3047; --dot:#152B46; --les:#8AA06B;
+  --surface:#15263B; --line:#2A3D55; --fg:#F3F1E9; --band:#1B3554; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1A2A; --paneel:#15263B; --vlak:#112033; --salie:#1F3324; --ink:#F3F1E9; --accent:#C5E75A; --op-accent:#152B46;
+  --muted:#A3B1C1; --lijn:#2A3D55; --lijn-zacht:#1F3047; --dot:#152B46; --les:#8AA06B;
+  --surface:#15263B; --line:#2A3D55; --fg:#F3F1E9; --band:#1B3554; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--ink);font:15px/1.55 var(--tekst);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 56px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+header.top{padding-block:20px 0}
+header.top h1{font:800 32px/1 var(--titel);margin:0}
+.intro-kop{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px}
+.lead{margin:0;color:var(--muted);max-width:62ch;font-size:14px}
+.presets{display:flex;flex-wrap:wrap;gap:8px}
+.presets button{font:600 13px var(--tekst);color:var(--accent);background:transparent;border:1.5px solid var(--accent);border-radius:999px;padding:7px 13px;cursor:pointer}
+.presets button:hover{background:var(--salie)}
+.presets button[aria-pressed=true]{background:var(--accent);color:var(--op-accent)}
+.melding{margin:0;padding:12px 14px;border-radius:12px;background:var(--paneel);border-left:4px solid var(--lime);font-size:14px}
+
+.sim{container-type:inline-size}
+.grid{display:grid;grid-template-columns:320px minmax(0,1fr);gap:24px;align-items:start}
+@container (max-width:860px){.grid{grid-template-columns:1fr} aside{position:static!important;order:2}}
+
+/* Bediening */
+aside{background:var(--paneel);border-radius:18px;padding:18px;position:sticky;top:16px;display:flex;flex-direction:column;gap:16px}
+aside h2{font:700 19px/1 var(--titel);margin:0}
+.groep{display:flex;flex-direction:column;gap:12px;padding-top:14px;border-top:1px solid var(--lijn)}
+.groep:first-of-type{border-top:0;padding-top:0}
+.veld{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center}
+.veld label,.veld .lb{font-weight:600;font-size:13.5px}
+.veld .uitleg{grid-column:1/-1;font-size:12px;color:var(--muted);line-height:1.4}
+.num{display:flex;align-items:center;border:1.5px solid var(--lijn);border-radius:10px;background:var(--vlak);overflow:hidden}
+.num span{padding:0 8px;color:var(--muted);font-size:13px}
+.num input{width:70px;border:0;background:transparent;font:600 14px var(--tekst);color:var(--ink);padding:8px 8px 8px 0;text-align:right;font-variant-numeric:tabular-nums}
+.num input:focus{outline:none}
+.num:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--salie)}
+.schakel{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer}
+.schakel b{font-weight:600;font-size:13.5px}
+.schakel input{appearance:none;width:42px;height:24px;border-radius:99px;background:var(--lijn);position:relative;cursor:pointer;flex:none;transition:background .15s;margin:0}
+.schakel input::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--vlak);transition:transform .15s}
+.schakel input:checked{background:var(--accent)}
+.schakel input:checked::after{transform:translateX(18px);background:var(--op-accent)}
+.sub{display:flex;flex-direction:column;gap:12px;padding:12px;border-radius:12px;background:var(--vlak)}
+.seg{display:inline-flex;border:1.5px solid var(--lijn);border-radius:10px;overflow:hidden;background:var(--vlak)}
+.seg button{border:0;background:transparent;font:600 13px var(--tekst);color:var(--ink);padding:7px 12px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* Uitkomst */
+.uitkomst{display:flex;flex-direction:column;gap:26px;min-width:0}
+.hero{display:flex;flex-direction:column;gap:16px}
+.brow{display:flex;align-items:center;gap:10px;font:600 12px/1 var(--tekst);letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin:0}
+.brow::before{content:"";width:22px;height:3px;background:var(--lime);border-radius:2px}
+.bedrag{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px}
+.bedrag .groot{font:800 clamp(52px,8vw,88px)/.85 var(--titel);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.bedrag .eenheid{font:600 16px var(--tekst);color:var(--muted)}
+.bedrag .pp{font:600 15px var(--tekst);color:var(--accent)}
+.baan{position:relative;padding-top:30px}
+.baan input[type=range]{width:100%;appearance:none;height:14px;border-radius:99px;background:linear-gradient(90deg,var(--paneel) 0 var(--be,50%),var(--salie) var(--be,50%) 100%);outline:none;cursor:pointer;margin:0}
+.baan input[type=range]::-webkit-slider-thumb{appearance:none;width:30px;height:30px;border-radius:50%;background:var(--ink);border:4px solid var(--bg);box-shadow:0 0 0 2px var(--ink)}
+.baan input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--ink);border:4px solid var(--bg);box-shadow:0 0 0 2px var(--ink)}
+.baan input[type=range]:focus-visible{outline:3px solid var(--accent);outline-offset:6px}
+.be{position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:3px;pointer-events:none;font:600 11.5px var(--tekst);color:var(--accent);white-space:nowrap}
+.be::after{content:"";width:3px;height:22px;background:var(--lime);border-radius:2px;box-shadow:0 0 0 1px var(--accent)}
+.schaal{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px;font-variant-numeric:tabular-nums}
+.zones{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--muted)}
+
+.kerncijfers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--lijn);border-radius:16px;overflow:hidden}
+@container (max-width:560px){.kerncijfers{grid-template-columns:1fr}}
+.kc{background:var(--vlak);padding:16px 18px;display:flex;flex-direction:column;gap:6px}
+.kc .k{font-size:12.5px;font-weight:600;color:var(--muted)}
+.kc .v{font:800 30px/1 var(--titel);font-variant-numeric:tabular-nums}
+.kc .x{font-size:12.5px;color:var(--muted)}
+.pil{display:inline-flex;align-items:center;gap:7px;font:700 12px var(--tekst);border-radius:99px;padding:5px 11px;width:max-content;white-space:nowrap}
+.pil.ok{background:var(--accent);color:var(--op-accent)}
+.pil.ok::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--dot)}
+.pil.nok{border:1.5px solid var(--ink);color:var(--ink)}
+.pil.nok::before{content:"";width:7px;height:7px;border-radius:50%;border:1.5px solid var(--ink)}
+
+section.blok h2{font:700 21px/1.1 var(--titel);margin:0 0 4px}
+section.blok .intro{margin:0 0 12px;color:var(--muted);font-size:13.5px;max-width:70ch}
+.kaart{background:var(--paneel);border-radius:16px;padding:16px}
+svg text{font-family:var(--tekst);fill:var(--muted);font-size:11px}
+.grafiek{width:100%;height:auto;display:block}
+.tabelwrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums;min-width:560px}
+th{font-weight:600;font-size:12px;color:var(--muted);text-align:right;padding:8px 10px;border-bottom:1.5px solid var(--lijn)}
+th:first-child,td:first-child{text-align:left;white-space:nowrap}
+td{padding:10px;text-align:right;border-bottom:1px solid var(--lijn)}
+tr:last-child td{border-bottom:0}
+td .pil{float:right}
+.ploegen{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@container (max-width:560px){.ploegen{grid-template-columns:1fr}}
+.ploeg{background:var(--vlak);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.ploeg h3{margin:0;font:700 17px/1.1 var(--titel)}
+.ploeg .waarde{font:800 28px/1 var(--titel);font-variant-numeric:tabular-nums}
+.balk{height:10px;border-radius:99px;background:var(--lijn-zacht);overflow:hidden;display:flex}
+.balk i{display:block;height:100%}
+.balk .m{background:var(--ink)} .balk .l{background:var(--les)}
+.ploeg ul{margin:0;padding:0;list-style:none;font-size:13px;display:flex;flex-direction:column;gap:4px}
+.ploeg li{display:flex;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
+.ploeg li span:first-child{color:var(--muted)}
+.oordeel{margin:12px 0 0;padding:12px 14px;border-radius:12px;background:var(--vlak);font-size:13.5px;border-left:4px solid var(--lime)}
+.opbouw{display:flex;flex-direction:column;gap:10px}
+.stapel{display:flex;height:26px;border-radius:8px;overflow:hidden;background:var(--lijn-zacht)}
+.stapel i{display:block;height:100%}
+.legende{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px 24px;font-size:13px}
+.legende div{display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
+.legende b{margin-left:auto;font-weight:600}
+.sw{width:12px;height:12px;border-radius:3px;flex:none}
+.punten{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@container (max-width:560px){.punten{grid-template-columns:1fr}}
+.punt{background:var(--salie);border-radius:14px;padding:14px 16px;font-size:13.5px}
+.punt b{display:block;font:700 15px/1.2 var(--titel);margin-bottom:4px}
+.voet{font-size:12px;color:var(--muted);border-top:1px solid var(--lijn);padding-top:12px;max-width:90ch;margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top"><h1>Interclubbijdrage</h1></header>
+
+  <div class="intro-kop">
+    <p class="lead">Schuif met de bijdrage per ploeg en zet onderdelen aan of uit. Je ziet meteen wat het de club kost, wat het opbrengt en of elke ploeg evenveel terugkrijgt. Op basis van de vier laatste padelseizoenen.</p>
+    <div class="presets" role="group" aria-label="Snelle scenario's">
+      <button type="button" data-preset="voorstel">Voorstel €150</button>
+      <button type="button" data-preset="kostendekkend">Kostendekkend</button>
+      <button type="button" data-preset="zonderCatering">Zonder catering</button>
+      <button type="button" data-preset="teamles">Met teamles</button>
+    </div>
+  </div>
+
+  <p class="melding" id="melding" role="status">Gegevens laden…</p>
+
+  <div class="sim" id="sim" hidden>
+  <div class="grid">
+    <aside aria-label="Parameters">
+      <h2>Parameters</h2>
+      <div class="groep">
+        <div class="veld"><label for="spelers">Spelers per ploeg</label><div class="num"><input id="spelers" type="number" min="4" max="8" step="1"></div><div class="uitleg">Om de bijdrage per speler te tonen. Reglement: 4 tot 8 spelers.</div></div>
+        <div class="veld"><label for="daling">Minder ploegen door de bijdrage</label><div class="num"><input id="daling" type="number" min="0" max="50" step="5"><span>%</span></div><div class="uitleg">Minder ploegen betekent ook minder thuismatchen.</div></div>
+      </div>
+      <div class="groep">
+        <div class="veld"><label for="kokerPrijs">Prijs per koker</label><div class="num"><span>€</span><input id="kokerPrijs" type="number" min="0" step="0.05"></div></div>
+        <div class="veld"><label for="kokers">Kokers per thuismatch</label><div class="num"><input id="kokers" type="number" min="0" step="1"></div></div>
+        <label class="schakel"><b>Hapje en drankje bij thuismatchen</b><input id="catering" type="checkbox"></label>
+        <div class="veld" id="cateringVeld"><label for="cateringPrijs">Kost per thuismatch (clubhuis)</label><div class="num"><span>€</span><input id="cateringPrijs" type="number" min="0" step="1"></div></div>
+      </div>
+      <div class="groep">
+        <div class="veld"><label for="trainingen">Trainingsmomenten per ploeg</label><div class="num"><input id="trainingen" type="number" min="0" step="1"></div><div class="uitleg">Terreinen zijn gratis; enkel ballen tellen als kost (2 kokers per moment).</div></div>
+        <div class="veld"><label for="extra">Extra per ploeg</label><div class="num"><span>€</span><input id="extra" type="number" min="0" step="5"></div><div class="uitleg">Bv. een fles bij thuiswinst of een slotmoment.</div></div>
+      </div>
+      <div class="groep">
+        <label class="schakel"><b>Teamles voor ploegen met 2 thuismatchen</b><input id="les" type="checkbox"></label>
+        <div class="sub" id="lesVeld">
+          <div class="veld"><span class="lb">Duur</span>
+            <div class="seg" role="group" aria-label="Duur van de les"><button type="button" id="duur60" data-duur="60">60 min</button><button type="button" id="duur90" data-duur="90">90 min</button></div></div>
+          <div class="veld"><label for="lesSpelers">Spelers in de les</label><div class="num"><input id="lesSpelers" type="number" min="1" max="8" step="1"></div></div>
+          <div class="veld"><label for="lesTarief">Tarief per speler</label><div class="num"><span>€</span><input id="lesTarief" type="number" min="0" step="1"></div><div class="uitleg" id="lesUitleg">Groepstarief uit Lessen. Een afgesproken teamtarief met de trainers vul je hier in.</div></div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="uitkomst">
+      <section class="hero" aria-labelledby="hTitel">
+        <p id="hTitel" class="brow">Bijdrage per ploeg per seizoen</p>
+        <div class="bedrag"><span class="groot" id="bijdrageTxt">€100</span><span class="eenheid">per ploeg</span><span class="pp" id="ppTxt">€14 per speler</span></div>
+        <div class="baan">
+          <div class="be" id="beMarker"><span id="beTxt">break-even</span></div>
+          <input id="bijdrage" type="range" min="0" max="300" step="5" aria-label="Bijdrage per ploeg in euro">
+          <div class="schaal"><span>€0</span><span>€100</span><span>€200</span><span>€300</span></div>
+          <div class="zones"><span>tekort voor de club</span><span>overschot voor de club</span></div>
+        </div>
+        <div class="kerncijfers">
+          <div class="kc"><span class="k">Saldo per jaar</span><span class="v" id="saldoJaar">-</span><span id="saldoPil"></span></div>
+          <div class="kc"><span class="k">Kostendekkend vanaf</span><span class="v" id="breakEven">-</span><span class="x">per ploeg, zodat elk seizoen sluit</span></div>
+          <div class="kc"><span class="k">Kostendekkende seizoenen</span><span class="v" id="dekking">-</span><span class="x" id="dekkingX">van de vorige seizoenen</span></div>
+        </div>
+      </section>
+
+      <section class="blok" aria-labelledby="gTitel">
+        <h2 id="gTitel">Saldo per jaar bij elke bijdrage</h2>
+        <p class="intro">Voorjaar plus najaar, gemiddeld over de getoonde seizoenen. Het bolletje is je huidige keuze.</p>
+        <div class="kaart"><svg class="grafiek" id="grafiek" viewBox="0 0 720 260" role="img" aria-label="Saldo per jaar volgens de bijdrage per ploeg"></svg></div>
+      </section>
+
+      <section class="blok" aria-labelledby="eTitel">
+        <h2 id="eTitel">Krijgt elke ploeg evenveel?</h2>
+        <p class="intro" id="eIntro">In een poule van 6 speelt elke ploeg 5 wedstrijden: 2 of 3 thuis. Dit is wat een ploeg voor dezelfde bijdrage terugkrijgt.</p>
+        <div class="kaart">
+          <div class="ploegen">
+            <div class="ploeg"><h3>Ploeg met 3 thuismatchen</h3><span class="waarde" id="w3">-</span><div class="balk" id="b3"></div><ul id="l3"></ul></div>
+            <div class="ploeg"><h3>Ploeg met 2 thuismatchen</h3><span class="waarde" id="w2">-</span><div class="balk" id="b2"></div><ul id="l2"></ul></div>
+          </div>
+          <p class="oordeel" id="oordeel"></p>
+        </div>
+      </section>
+
+      <section class="blok" aria-labelledby="sTitel">
+        <h2 id="sTitel">Per seizoen</h2>
+        <p class="intro">Werkelijke aantallen uit de interclubdata. Thuismatchen in de eindronde tellen mee als kost.</p>
+        <div class="kaart tabelwrap">
+          <table>
+            <thead><tr><th>Seizoen</th><th>Ploegen</th><th>2 / 3 thuis</th><th>Thuismatchen</th><th>Kost</th><th>Opbrengst</th><th>Saldo</th></tr></thead>
+            <tbody id="seizoenen"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="blok" aria-labelledby="oTitel">
+        <h2 id="oTitel">Waar gaat het geld naartoe?</h2>
+        <p class="intro">Kosten per jaar volgens je instellingen.</p>
+        <div class="kaart opbouw"><div class="stapel" id="stapel"></div><div class="legende" id="legende"></div></div>
+      </section>
+
+      <section class="blok" aria-labelledby="pTitel">
+        <h2 id="pTitel">Om mee te nemen naar de beslissing</h2>
+        <div class="punten">
+          <div class="punt"><b>Bijdrage Tennis en Padel Vlaanderen</b>De interclubbijdrage die de club aan TV betaalt, mag niet doorgerekend worden aan de spelers. Koppel de clubbijdrage aan wat de ploeg krijgt.</div>
+          <div class="punt"><b>Teamles: timing en trainers</b>Het aantal thuismatchen is pas gekend na de loting. Tussen loting en start (±5 weken in het voorjaar) moeten ±10 à 14 teamlessen passen, buiten de piekuren en op 2 terreinen.</div>
+          <div class="punt"><b>Afspraak met het clubhuis</b>Het clubhuis is een aparte entiteit. Leg vast hoe de catering per thuismatch verrekend wordt.</div>
+          <div class="punt"><b>Beslissing</b>Een bijdrage heeft financiële impact: de commissie stelt voor, de raad van bestuur beslist (nota BTC-PC-MM004).</div>
+        </div>
+      </section>
+
+      <p class="voet" id="voet">Bronnen: interclubdata padel (ploegen, thuismatchen per poule en eindronde) · ballen €3,25 per koker en catering €30 per thuismatch volgens de padelcommissie · lestarieven uit Lessen. Je instellingen worden enkel op dit toestel bewaard.</p>
+    </div>
+  </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const API = "https://povgjkvmzfrhhaxfanwn.supabase.co/rest/v1/rpc/";
+  const KEY = "sb_publishable_LfcbY6X1DgOBFW1rH3Umnw__RdObpur";
+  const TOKEN = window.BTC && BTC.token;
+  const KOKERS_TRAINING = 2;
+  let SEIZOENEN = [], TARIEF = {60:25, 90:35};
+  const STANDAARD = {bijdrage:100, spelers:7, daling:0, kokerPrijs:3.25, kokers:2, catering:true, cateringPrijs:30,
+                     trainingen:1, extra:0, les:true, duur:60, lesSpelers:7, lesTarief:25};
+  const PRESETS = {
+    voorstel:{bijdrage:150, les:false},
+    kostendekkend:{les:false, _kostendekkend:true},
+    zonderCatering:{catering:false, les:false, bijdrage:40},
+    teamles:{les:true, _kostendekkend:true},
+  };
+  const $ = id => document.getElementById(id);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const eur = (n, d=0) => (n<0?"-":"") + "€" + Math.abs(n).toLocaleString("nl-BE",{minimumFractionDigits:d,maximumFractionDigits:d});
+  const NUM = ["spelers","daling","kokerPrijs","kokers","cateringPrijs","trainingen","extra","lesSpelers","lesTarief"];
+  const OPSLAG = "btc-ic-bijdrage";
+  let s = {...STANDAARD};
+
+  function melding(t){ const m = $("melding"); m.textContent = t; m.hidden = !t; }
+
+  function reken(st, bijdrage){
+    const f = 1 - (st.daling||0)/100;
+    const perMatch = st.kokers*st.kokerPrijs + (st.catering ? st.cateringPrijs : 0);
+    const lesKost = st.les ? st.lesSpelers*st.lesTarief : 0;
+    return SEIZOENEN.map(z => {
+      const ploegen = (z.n2+z.n3)*f, thuis = (z.poule+z.eind)*f, lessen = st.les ? z.n2*f : 0;
+      const delen = {
+        ballen: thuis*st.kokers*st.kokerPrijs,
+        catering: st.catering ? thuis*st.cateringPrijs : 0,
+        training: ploegen*st.trainingen*KOKERS_TRAINING*st.kokerPrijs,
+        lessen: lessen*lesKost,
+        extra: ploegen*st.extra,
+      };
+      const kost = Object.values(delen).reduce((a,b)=>a+b,0);
+      const opbr = ploegen*bijdrage;
+      return {...z, ploegen, thuis, kost, opbr, saldo:opbr-kost, delen, be: ploegen>0 ? kost/ploegen : 0, perMatch, lesKost};
+    });
+  }
+  const jaarSaldo = r => r.length ? r.reduce((a,z)=>a+z.saldo,0)/r.length*2 : 0;
+
+  function syncInputs(){
+    NUM.forEach(k => { $(k).value = s[k]; });
+    $("bijdrage").value = s.bijdrage;
+    $("catering").checked = s.catering; $("les").checked = s.les;
+    $("cateringVeld").hidden = !s.catering; $("lesVeld").hidden = !s.les;
+    $("duur60").setAttribute("aria-pressed", s.duur===60); $("duur90").setAttribute("aria-pressed", s.duur===90);
+  }
+
+  function render(){
+    const r = reken(s, s.bijdrage);
+    const be = Math.max(0, ...r.map(z=>z.be));
+    const js = jaarSaldo(r);
+    const ok = r.filter(z=>z.saldo>=0).length;
+
+    $("bijdrageTxt").textContent = eur(s.bijdrage);
+    $("ppTxt").textContent = eur(s.spelers>0 ? s.bijdrage/s.spelers : 0) + " per speler";
+    const pct = Math.min(100, Math.max(0, be/300*100));
+    $("bijdrage").style.setProperty("--be", pct + "%");
+    $("beMarker").style.left = `calc(${pct}% + ${(0.5 - pct/100)*30}px)`;
+    $("beTxt").textContent = be > 300 ? "break-even boven €300" : "break-even " + eur(Math.ceil(be));
+    $("saldoJaar").textContent = eur(js);
+    $("saldoPil").className = "pil " + (js>=0 ? "ok" : "nok");
+    $("saldoPil").textContent = js>=0 ? "Overschot" : "Tekort";
+    $("breakEven").textContent = eur(Math.ceil(be));
+    $("dekking").textContent = ok + " / " + r.length;
+    $("dekkingX").textContent = ok===r.length ? "alle seizoenen sluiten" : "van de vorige seizoenen";
+
+    const tb = $("seizoenen"); tb.textContent = "";
+    r.forEach(z => {
+      const tr = document.createElement("tr");
+      const cel = t => { const td = document.createElement("td"); td.textContent = t; tr.appendChild(td); return td; };
+      cel(z.naam); cel(z.ploegen.toLocaleString("nl-BE",{maximumFractionDigits:1})); cel(z.n2 + " / " + z.n3);
+      cel(z.thuis.toLocaleString("nl-BE",{maximumFractionDigits:1})); cel(eur(z.kost)); cel(eur(z.opbr));
+      const td = cel(""); const p = document.createElement("span"); p.className = "pil " + (z.saldo>=0?"ok":"nok"); p.textContent = eur(z.saldo); td.appendChild(p);
+      tb.appendChild(tr);
+    });
+
+    const pm = s.kokers*s.kokerPrijs + (s.catering ? s.cateringPrijs : 0), lk = s.les ? s.lesSpelers*s.lesTarief : 0;
+    const w3 = 3*pm, w2 = 2*pm + lk, max = Math.max(w3, w2, 1);
+    $("w3").textContent = eur(w3); $("w2").textContent = eur(w2);
+    $("b3").innerHTML = `<i class="m" style="width:${w3/max*100}%"></i>`;
+    $("b2").innerHTML = `<i class="m" style="width:${2*pm/max*100}%"></i><i class="l" style="width:${lk/max*100}%"></i>`;
+    const li = (a,b) => `<li><span>${a}</span><span>${b}</span></li>`;
+    $("l3").innerHTML = li("3 thuismatchen × " + eur(pm,2), eur(w3,2));
+    $("l2").innerHTML = li("2 thuismatchen × " + eur(pm,2), eur(2*pm,2)) + (s.les ? li("Teamles " + s.duur + " min (" + s.lesSpelers + " × " + eur(s.lesTarief) + ")", eur(lk,2)) : li("Geen compensatie", "€0,00"));
+    const verschil = w2 - w3;
+    let t;
+    if(!s.les) t = `Een ploeg met 2 thuismatchen krijgt ${eur(Math.abs(verschil),2)} minder terug voor dezelfde bijdrage. Een teamles kan dat compenseren.`;
+    else if(Math.abs(verschil) < 10) t = `In evenwicht: beide ploegen krijgen ongeveer evenveel terug.`;
+    else if(verschil > 0) t = `De teamles kost ${eur(lk)}, terwijl de ontbrekende thuismatch ${eur(pm,2)} waard is. Ploegen met 2 thuismatchen krijgen zo ${eur(verschil)} meer dan ploegen met 3. In evenwicht komt het bij een les van ±${eur(pm)}, bv. met een afgesproken teamtarief of een kortere les op 1 terrein.`;
+    else t = `De teamles compenseert de ontbrekende thuismatch maar gedeeltelijk: nog ${eur(-verschil)} verschil.`;
+    $("oordeel").textContent = t;
+    const n2 = SEIZOENEN.reduce((a,z)=>a+z.n2,0), nt = SEIZOENEN.reduce((a,z)=>a+z.n2+z.n3,0);
+    $("eIntro").textContent = `In een poule van 6 speelt elke ploeg 5 wedstrijden: 2 of 3 thuis. In de getoonde seizoenen hadden ${n2} van de ${nt} ploegen er maar 2. Dit is wat een ploeg voor dezelfde bijdrage terugkrijgt.`;
+
+    const kl = {ballen:["Ballen thuismatchen","--ink"], catering:["Hapje en drankje","--accent"], training:["Ballen trainingen","--muted"], lessen:["Teamlessen","--les"], extra:["Extra per ploeg","--lijn"]};
+    const tot = {}; Object.keys(kl).forEach(k => tot[k] = r.length ? r.reduce((a,z)=>a+z.delen[k],0)/r.length*2 : 0);
+    const totaal = Object.values(tot).reduce((a,b)=>a+b,0), som = totaal || 1;
+    $("stapel").innerHTML = Object.keys(kl).filter(k=>tot[k]>0).map(k=>`<i style="width:${tot[k]/som*100}%;background:var(${kl[k][1]})" title="${kl[k][0]}"></i>`).join("");
+    $("legende").innerHTML = Object.keys(kl).map(k=>`<div><span class="sw" style="background:var(${kl[k][1]})"></span>${kl[k][0]}<b>${eur(tot[k])}</b></div>`).join("")
+      + `<div style="font-weight:700"><span class="sw"></span>Totaal per jaar<b>${eur(totaal)}</b></div>`;
+
+    tekenGrafiek();
+    try{ localStorage.setItem(OPSLAG, JSON.stringify(s)); }catch(_){}
+  }
+
+  function tekenGrafiek(){
+    const W=720, H=260, L=64, R=18, T=18, B=36;
+    const ink = css("--ink"), acc = css("--accent"), lijn = css("--lijn"), salie = css("--salie"), lime = css("--lime");
+    const xs = []; for(let b=0;b<=300;b+=10) xs.push(b);
+    const ys = xs.map(b => jaarSaldo(reken(s,b)));
+    const ymin = Math.min(0, ...ys), ymax = Math.max(0, ...ys);
+    const raw = (ymax-ymin)/4 || 1, p = Math.pow(10, Math.floor(Math.log10(raw)));
+    const stap = [1,2,2.5,5,10].map(m=>m*p).find(v=>v>=raw) || raw;
+    const lo = Math.floor(ymin/stap)*stap, hi = Math.ceil(ymax/stap)*stap || stap;
+    const X = b => L + b/300*(W-L-R), Y = v => T + (hi-v)/(hi-lo||1)*(H-T-B);
+    let g = "";
+    for(let v=lo; v<=hi+0.001; v+=stap){
+      const nul = Math.abs(v) < 1e-6;
+      g += `<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${nul?acc:lijn}" stroke-width="${nul?1.5:1}" ${nul?'stroke-dasharray="4 4"':''}/>`;
+      g += `<text x="${L-8}" y="${Y(v)+4}" text-anchor="end">${eur(v)}</text>`;
+    }
+    [0,50,100,150,200,250,300].forEach(b => g += `<text x="${X(b)}" y="${H-12}" text-anchor="middle">€${b}</text>`);
+    const pad = xs.map((b,i)=>`${i?'L':'M'}${X(b).toFixed(1)},${Y(ys[i]).toFixed(1)}`).join(" ");
+    const y0 = Y(Math.max(lo, Math.min(hi, 0)));
+    g += `<path d="${pad} L${X(300)},${y0} L${X(0)},${y0} Z" fill="${salie}" fill-opacity=".8"/>`;
+    g += `<path d="${pad}" fill="none" stroke="${ink}" stroke-width="2.5" stroke-linejoin="round"/>`;
+    const cy = jaarSaldo(reken(s,s.bijdrage));
+    g += `<line x1="${X(s.bijdrage)}" x2="${X(s.bijdrage)}" y1="${T}" y2="${H-B}" stroke="${ink}" stroke-opacity=".25"/>`;
+    g += `<circle cx="${X(s.bijdrage)}" cy="${Y(cy)}" r="7" fill="${lime}" stroke="${ink}" stroke-width="2.5"/>`;
+    const lx = Math.min(Math.max(X(s.bijdrage), L+70), W-R-70);
+    g += `<text x="${lx}" y="${Math.max(T+12, Y(cy)-14)}" text-anchor="middle" style="fill:${ink};font-weight:700;font-size:12px">${eur(s.bijdrage)} → ${eur(cy)} per jaar</text>`;
+    $("grafiek").innerHTML = g;
+  }
+
+  function zetPreset(naam){ document.querySelectorAll("[data-preset]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.preset===naam))); }
+  function kostendekkend(){ const be0 = Math.max(0, ...reken(s, 0).map(z=>z.be)); s.bijdrage = Math.min(300, Math.ceil(be0/5)*5); }
+
+  function koppel(){
+    $("bijdrage").addEventListener("input", e => { s.bijdrage = +e.target.value; zetPreset(null); render(); });
+    NUM.forEach(k => $(k).addEventListener("input", e => { const v = parseFloat(e.target.value); if(!isNaN(v)){ s[k] = v; zetPreset(null); render(); } }));
+    $("catering").addEventListener("change", e => { s.catering = e.target.checked; $("cateringVeld").hidden = !s.catering; zetPreset(null); render(); });
+    $("les").addEventListener("change", e => { s.les = e.target.checked; $("lesVeld").hidden = !s.les; zetPreset(null); render(); });
+    ["duur60","duur90"].forEach(id => $(id).addEventListener("click", e => {
+      s.duur = +e.currentTarget.dataset.duur; s.lesTarief = TARIEF[s.duur] ?? s.lesTarief; syncInputs(); zetPreset(null); render();
+    }));
+    document.querySelectorAll("[data-preset]").forEach(b => b.addEventListener("click", () => {
+      const p = PRESETS[b.dataset.preset];
+      s = {...STANDAARD, lesTarief: TARIEF[STANDAARD.duur] ?? STANDAARD.lesTarief, ...p}; delete s._kostendekkend;
+      if(p._kostendekkend) kostendekkend();
+      syncInputs(); zetPreset(b.dataset.preset); render();
+    }));
+  }
+
+  async function start(){
+    if(!TOKEN){ melding("Meld je aan op het ledenportaal."); return; }
+    try{
+      const res = await fetch(API + "club_ic_bijdrage_data", { method:"POST",
+        headers:{ apikey:KEY, Authorization:"Bearer "+KEY, "Content-Type":"application/json" }, body: JSON.stringify({p_token: TOKEN}) });
+      if(res.status === 404){ melding("De gegevens voor deze pagina zijn nog niet beschikbaar. De beheerder moet het script 03_Competitie_Interclubbijdrage_simulator.sql uitvoeren."); return; }
+      const d = await res.json();
+      if(!res.ok){ melding("De gegevens konden niet geladen worden. Probeer later opnieuw."); return; }
+      if(d.fout === "niet aangemeld"){ BTC.naarLogin(); return; }
+      if(d.fout){ melding(d.fout === "enkel voor de padelcommissie" ? "Deze pagina is enkel voor de padelcommissie en het bestuur." : d.fout); return; }
+      SEIZOENEN = (d.seizoenen || []).map(z => ({naam:z.naam, n2:+z.n2, n3:+z.n3, poule:+z.poule, eind:+z.eind}));
+      if(!SEIZOENEN.length){ melding("Er zijn nog geen padelseizoenen met wedstrijden."); return; }
+      if(d.lestarief){ Object.keys(d.lestarief).forEach(k => TARIEF[+k] = +d.lestarief[k]); }
+      STANDAARD.lesTarief = TARIEF[STANDAARD.duur] ?? STANDAARD.lesTarief;
+      s = {...STANDAARD};
+      try{ const opg = JSON.parse(localStorage.getItem(OPSLAG) || "null"); if(opg) s = {...STANDAARD, ...opg}; }catch(_){}
+      $("lesUitleg").textContent = `Groepstarief uit Lessen: ${eur(TARIEF[60]||0)} (60 min) of ${eur(TARIEF[90]||0)} (90 min) per speler. Een afgesproken teamtarief met de trainers vul je hier in.`;
+      if(d.stand) $("voet").textContent = `Bronnen: interclubdata padel, stand ${new Date(d.stand+"T12:00:00").toLocaleDateString("nl-BE")} (ploegen, thuismatchen per poule en eindronde) · ballen €3,25 per koker en catering €30 per thuismatch volgens de padelcommissie · lestarieven uit Lessen. Je instellingen worden enkel op dit toestel bewaard.`;
+      melding(""); $("sim").hidden = false;
+      syncInputs(); koppel(); render();
+    }catch(_){
+      melding("De server antwoordt niet. Controleer je verbinding en probeer opnieuw.");
+    }
+  }
+  start();
+})();
+</script>
+</body>
+</html>

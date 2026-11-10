@@ -8,6 +8,7 @@
 | `klassementsimulator/` | Klassementsimulator (iedereen met een code; bereik volgens rol) | `…/klassementsimulator/` |
 | `interclub/` | Interclub: kalender en uitslagen, ploeg inschrijven, mijn ploegen, overzicht voor commissie en bestuur | `…/interclub/` |
 | `opstellingsplanner/` | Opstellingsplanner interclub (kapiteins, commissie, bestuur) | `…/opstellingsplanner/` |
+| `interclubbijdrage/` | Simulator interclubbijdrage per ploeg (padelcommissie en bestuur) | `…/interclubbijdrage/` |
 
 Geen enkele pagina bevat namen of gegevens: alles komt live uit Supabase `padel-interclub`
 via publieke functies die zelf sessie en rol controleren. De publieke sleutel in de pagina's
@@ -120,3 +121,10 @@ Privacy: `ladder_mijn` registreert enkel de actieve dag per speler (opvolging la
   meest gebruikte pagina's en tabbladen, weekdag, gsm/computer, bereik per rol, leden en niet-actieve leden.
 - Per lid: klik op een naam in de ledenlijst → hetzelfde rapport voor dat lid (`p_speler`); Esc of "Alle leden" wist de filter.
 - Scripts: `sql/01_Governance_Clublogin_gebruik.sql` (volledig) en `sql/01_Governance_Clublogin_gebruik_lid.sql` (enkel de uitbreiding per lid).
+
+## Interclubbijdrage (`interclubbijdrage/`)
+- Simulator voor de interclubbijdrage per ploeg (nota BTC-PC-MM004): bijdrage, ballen, catering, trainingen, extra en
+  een teamles voor ploegen met 2 thuismatchen. Toont saldo per jaar, break-even, saldo per seizoen en of elke ploeg evenveel terugkrijgt.
+- Link onder **Padelcommissie** op de startpagina. Gegevens via `club_ic_bijdrage_data(p_token)`: enkel aantallen per seizoen
+  (ploegen met 2/3 thuismatchen, poule- en eindrondethuismatchen) en de groepstarieven uit Lessen; toegang commissie en bestuur.
+- Script: `sql/03_Competitie_Interclubbijdrage_simulator.sql`. Instellingen worden per toestel bewaard (`btc-ic-bijdrage`).

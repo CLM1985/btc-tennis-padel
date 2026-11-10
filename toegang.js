@@ -80,9 +80,11 @@
 
   window.BTC = { token: lees(SLEUTEL), naarLogin: naarLogin, afmelden: afmelden, voorbeeldBalk: voorbeeldBalk, voorbeeldStop: voorbeeldStop, bezoek: bezoek };
   if (window.BTC_START) return;            // startpagina: zelf aanmelden, balk via club_mij
-  if (window.BTC_PUBLIEK) { kop(); if (window.BTC.token) { voorbeeldBalk(lees(VB)); zijbalk(); } }  // publieke pagina: geen doorverwijzing
+  /* window.BTC_GEEN_ZIJBALK = 1 vóór dit script: pagina over de volle breedte, zonder MyBTC en Clubkalender. */
+  var metZijbalk = !window.BTC_GEEN_ZIJBALK;
+  if (window.BTC_PUBLIEK) { kop(); if (window.BTC.token) { voorbeeldBalk(lees(VB)); if (metZijbalk) zijbalk(); } }  // publieke pagina: geen doorverwijzing
   else if (!window.BTC.token) naarLogin();
-  else { kop(); voorbeeldBalk(lees(VB)); zijbalk(); }
+  else { kop(); voorbeeldBalk(lees(VB)); if (metZijbalk) zijbalk(); }
 
   /* Eén kop voor alle onderliggende pagina's, in de stijl van de startpagina: lichtblauwe band over de volle
      breedte, logo, "← Ledenportaal", paginatitel, naam en Afmelden. De oude kop van de pagina wordt verborgen;

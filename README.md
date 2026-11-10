@@ -128,3 +128,4 @@ Privacy: `ladder_mijn` registreert enkel de actieve dag per speler (opvolging la
 - Link onder **Padelcommissie** op de startpagina. Gegevens via `club_ic_bijdrage_data(p_token)`: enkel aantallen per seizoen
   (ploegen met 2/3 thuismatchen, poule- en eindrondethuismatchen) en de groepstarieven uit Lessen; toegang commissie en bestuur.
 - Script: `sql/03_Competitie_Interclubbijdrage_simulator.sql`. Instellingen worden per toestel bewaard (`btc-ic-bijdrage`).
+- Volle breedte zonder MyBTC/Clubkalender: `window.BTC_GEEN_ZIJBALK=1` vóór `toegang.js` (werkt voor elke pagina).

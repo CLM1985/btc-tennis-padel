@@ -96,6 +96,7 @@ header.top .toast{color:var(--on-band)}
 .spelerskop .h2{font-family:var(--f-display);font-weight:700;font-size:1.4rem;color:var(--ink)}
 .spelerskop .h2::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--lime);margin-right:8px;vertical-align:.12em}
 .kopinfo{display:flex;gap:10px;align-items:center;font-size:.85rem;color:var(--muted);font-weight:600;text-align:right}
+.kopinfo{min-width:0}.kopinfo > span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.spelerskop .h2{flex:0 0 auto}
 .spelerskop #bronlabel{display:none}
 .pijl{display:inline-block;transition:transform .15s}
 .spelerskop[aria-expanded=false] .pijl{transform:rotate(-90deg)}
@@ -167,6 +168,16 @@ tr.wij td{background:var(--accent-soft)}
 .poulelijst{display:grid;gap:4px;font-size:.88rem}
 .poulelijst div{display:grid;grid-template-columns:minmax(64px,auto) minmax(0,1fr) auto;gap:10px;padding:4px 8px;border-bottom:1px solid var(--line)}
 .poulelijst > div > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scout table td,.scout table th{vertical-align:middle}
+.scout select{width:100%;min-width:0;max-width:100%}
+.scout table.duo{table-layout:fixed;width:100%}.scout table.duo td{white-space:normal;overflow-wrap:anywhere}
+.scout .gekozen{display:block;font-size:.74rem;color:var(--muted);margin-top:2px}
+.scout table.vs{width:100%}.scout table.vs td:first-child{font-size:.78rem}
+.scout .pk{font-weight:700;white-space:nowrap}
+.scout .pk.ok{color:var(--ok)}.scout .pk.warn{color:var(--warn)}.scout .pk.bad{color:var(--bad)}
+.scout .bar{display:flex;height:22px;border-radius:5px;overflow:hidden;border:1px solid var(--line);font-size:.72rem;font-weight:700}
+.scout .bar span{display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap}
+.scout .ps{display:block;font-size:.64rem;font-weight:700;color:var(--muted)}
 .tab small{display:block;font-family:var(--f-body);font-size:.7rem;color:var(--muted);font-weight:600;letter-spacing:.02em}
 .footnote{font-size:.82rem;color:var(--muted);max-width:80ch}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -259,6 +270,7 @@ h1::after{content:"";display:block;width:28px;height:3px;background:var(--lime);
       </span>
       <div class="tabs" role="tablist" id="tabs"></div>
       <div id="standView" hidden></div>
+      <div id="scoutView" hidden></div>
       <div id="dagView" style="display:flex;flex-direction:column;gap:10px">
       <div class="matchinfo" id="matchinfo"></div>
       <div style="display:flex;flex-wrap:wrap;gap:10px 18px;align-items:end" id="handmatig">
@@ -345,7 +357,8 @@ const DEMO_LIJST = {categorie:"PADEL GEMENGD", seizoen:"Najaar", periode:"Voorbe
 // ---------------------------------------------------------------- state
 const UI_LS="btc-opstelling-ui-v2";
 const ui = Object.assign({comp:"nj-mixed", afdIdx:1, ploegId:null, slot:"p1", opt:"st"}, laadUi());
-if(!ALLE_SLOTS.includes(ui.slot) && ui.slot!=="stand") ui.slot="p1";
+if(!ALLE_SLOTS.includes(ui.slot) && ui.slot!=="stand" && ui.slot!=="scout") ui.slot="p1";
+if(!ui.scoutKeuze) ui.scoutKeuze={};
 function laadUi(){ try{ return JSON.parse(localStorage.getItem(UI_LS)||"{}"); }catch(e){ return {}; } }
 function bewaarUi(){ try{ localStorage.setItem(UI_LS, JSON.stringify(ui)); }catch(e){} }
 
@@ -364,7 +377,7 @@ function zetPanelen(){
   const kort=p=>String(p.ploeg).replace(/^.*?\s(ploeg\s+\S+)$/i,(m,x)=>x.charAt(0).toUpperCase()+x.slice(1));
   $("configKort").textContent = pl ? `${C().label.split(" · ").slice(1).join(" · ")} · ${C().seizoen==="Voorjaar"?"P"+R().afd:"Afdeling "+R().afd} · ${kort(pl)}` : "kies een ploeg";
   const x=wedstrijdenVanPloeg()[ui.slot];
-  $("opstKort").textContent = ui.slot==="stand" ? "Klassement" : (SLOT_LABEL[ui.slot]||"") + (x?.tegen?` · ${x.tu==="thuis"?"tegen":"bij"} ${x.tegen}`:"");
+  $("opstKort").textContent = ui.slot==="stand" ? "Klassement" : ui.slot==="scout" ? "Scouting · "+(scoutOnt()?.tegen||"") : (SLOT_LABEL[ui.slot]||"") + (x?.tegen?` · ${x.tu==="thuis"?"tegen":"bij"} ${x.tegen}`:"");
   const gesp=ALLE_SLOTS.filter(id=>effDag(id).officieel).length;
   $("inzetKort").textContent = gesp ? `${gesp} ontmoeting${gesp>1?"en":""} gespeeld` : "";
 }
@@ -385,7 +398,8 @@ function eersteSlot(){
   const volgende=ALLE_SLOTS.filter(id=>w[id] && !w[id].gespeeld && String(w[id].datum)>=nu.slice(0,10));
   return volgende[0] || ALLE_SLOTS.filter(id=>w[id]).pop() || "p1";
 }
-const sp=id=>spelersMap.get(id);
+let tgnMap=new Map();                            // spelers van de tegenstander (scouting), negatieve id
+const sp=id=>spelersMap.get(id)||tgnMap.get(id);
 const sterkte=p=>p ? (typeof p.st==="number" ? p.st : p.k) : 0;
 
 // ---------------------------------------------------------------- regels
@@ -460,8 +474,13 @@ function status(d){
 
 // ---------------------------------------------------------------- voorstel
 function voorstel(d){
-  const c=C(), r=R(), waarde=ui.opt==="st"?sterkte:(p=>p.k);
+  const r=R(), waarde=ui.opt==="st"?sterkte:(p=>p.k);
   const pool=plan.kern.filter(id=>!d.afwezig.includes(id)).map(sp).filter(p=>p && p.k<=r.kmax);
+  return voorstelPool(pool, waarde);
+}
+// Sterkste geldige opstelling uit een willekeurige pool (eigen selectie of tegenstander)
+function voorstelPool(pool, waarde){
+  const c=C(), r=R();
   if(pool.length<4) return {fout:"Te weinig beschikbare spelers in de selectie (minstens 4, binnen het maximumklassement)."};
   const opties=[];
   for(let ri=0; ri<c.rot; ri++) opties.push(rotOpties(pool,ri,r,waarde).sort((a,b)=>b.w-a.w));
@@ -780,6 +799,134 @@ function renderStand(){
     <h3 style="margin-top:6px">Ontmoetingen</h3><div class="poulelijst">${lijst}</div>`;
 }
 
+// ---------------------------------------------------------------- scouting tegenstander
+// Winstkans van een duo op basis van het verschil in speelsterkte (som van beide spelers).
+// Gekalibreerd op padelstats.be-simulaties van 10/11/2026 (6 duels, afwijking ± 4 procentpunt).
+// Waar padelstats exact dit duel simuleerde, toont de planner die waarde.
+const SC_A=0.0302, SC_K=0.74;
+const winKans=d=>1/(1+Math.exp(-Math.sign(d)*SC_A*Math.pow(Math.abs(d),SC_K)));
+let scout={ploegId:null, data:null, fout:null, laden:false}, onsOff=0;
+function laadScout(){
+  if(demo || !token || ui.ploegId==null || scout.ploegId===ui.ploegId) return;
+  const gevraagd=ui.ploegId; scout={ploegId:gevraagd, data:null, fout:null, laden:true}; tgnMap=new Map();
+  rpc("club_planner_scouting",{p_token:token,p_ploeg:gevraagd}).then(r=>{
+    if(scout.ploegId!==gevraagd) return;
+    scout.laden=false;
+    if(r.fout) scout.fout=r.fout; else scout.data=r;
+    zetTgn(); renderTabs(); zetPanelen(); if(ui.slot==="scout") renderDag();
+  }).catch(e=>{ if(scout.ploegId!==gevraagd) return; scout.laden=false; scout.fout=e.message||"niet bereikbaar"; if(ui.slot==="scout") renderDag(); });
+}
+function scoutOnt(){ return (scout.ploegId===ui.ploegId && scout.data?.ontmoetingen?.[0]) || null; }
+const mediaan=a=>{ if(!a.length) return 0; const s=a.slice().sort((x,y)=>x-y); return s[Math.floor(s.length/2)]; };
+function zetTgn(){
+  tgnMap=new Map(); const o=scoutOnt(); if(!o) return;
+  const sp0=o.spelers||[];
+  const off=mediaan(sp0.filter(p=>typeof p.st==="number"&&p.k).map(p=>p.st-p.k));
+  sp0.forEach(p=>{ const q=Object.assign({},p); if(typeof q.st!=="number"){ q.st=(q.k||0)+off; q.geschat=true; } tgnMap.set(q.id,q); });
+}
+// Speelsterkte op dezelfde schaal voor beide ploegen; zonder meting: klassement + mediaanverschil van de ploeg
+const stS=p=>!p?0:(typeof p.st==="number"?p.st:(p.k||0)+onsOff);
+const geschat=p=>p && (p.geschat || typeof p.st!=="number");
+function duoTypes(){ const c=C();
+  if(c.mixed) return [["HD","Herendubbel","M","M"],["DD","Damesdubbel","V","V"],["GD","Gemengd dubbel","M","V"]];
+  if(c.enkelDames) return [["DD","Damesdubbel","V","V"]];
+  return [["D","Dubbel",null,null]];
+}
+function duosVan(pool,g1,g2){
+  const uit=[];
+  for(let i=0;i<pool.length;i++) for(let j=i+1;j<pool.length;j++){
+    let a=pool[i], b=pool[j];
+    if(g1){
+      if(g1===g2){ if(a.g!==g1||b.g!==g1) continue; }
+      else { if(a.g===g2&&b.g===g1) [a,b]=[b,a]; if(a.g!==g1||b.g!==g2) continue; }
+    }
+    uit.push({ids:[a.id,b.id], key:[a.id,b.id].sort((x,y)=>x-y).join("+"), st:stS(a)+stS(b), k:(a.k||0)+(b.k||0), sp:[a,b]});
+  }
+  return uit.sort((x,y)=>y.st-x.st||y.k-x.k);
+}
+function duoKans(o,a,b){
+  const ka=a.slice().sort((x,y)=>x-y).join("+"), kb=b.slice().sort((x,y)=>x-y).join("+");
+  const m=(o.metingen||[]).find(m=>m.a.slice().sort((x,y)=>x-y).join("+")===ka && m.b.slice().sort((x,y)=>x-y).join("+")===kb);
+  if(m) return {p:Number(m.p)/100, ps:true};
+  const st=ids=>ids.reduce((s,id)=>s+stS(sp(id)),0);
+  return {p:winKans(st(a)-st(b)), ps:false};
+}
+const pctTxt=p=>Math.round(p*100)+"%";
+const pkKl=p=>p>=0.55?"ok":p>=0.45?"warn":"bad";
+function pkCel(k){ return `<span class="pk ${pkKl(k.p)}">${pctTxt(k.p)}</span>${k.ps?'<span class="ps" title="Exact dit duel gesimuleerd op padelstats.be">padelstats</span>':""}`; }
+function duoNaam(ids){ return ids.map(id=>{ const p=sp(id); return p?esc(kortNaam(p.naam))+(geschat(p)?"*":""):"?"; }).join(" / "); }
+function verdeling(ps){ let d=[1]; ps.forEach(p=>{ const n=Array(d.length+1).fill(0); d.forEach((q,i)=>{ n[i]+=q*(1-p); n[i+1]+=q*p; }); d=n; }); return d; }
+function winstUit(d){ const n=d.length-1; let w=0; d.forEach((q,i)=>{ if(i*2>n) w+=q; else if(i*2===n) w+=q/2; }); return w; }
+function posLabel(ri,mi){ const c=C(), nr=ri*2+mi+1;
+  if(c.mixed) return `M${nr} · `+(ri===0?(mi===0?"dames":"heren"):(mi===0?"gemengd, sterkste":"gemengd, zwakste"));
+  return `M${nr}`+(sterksteRegel(ri)?(mi===0?" · sterkste":" · zwakste"):"");
+}
+function ontmoetingTabel(o, onsOpst, tgnOpst, titel){
+  const c=C(), ps=[]; let rijen="";
+  for(let ri=0; ri<c.rot; ri++) for(let mi=0; mi<2; mi++){
+    const a=onsOpst[ri]?.[mi], b=tgnOpst[ri]?.[mi];
+    if(!a||!b||a.includes(null)||b.includes(null)) continue;
+    const k=duoKans(o,a,b); ps.push(k.p);
+    const st=ids=>ids.reduce((s,id)=>s+stS(sp(id)),0);
+    rijen+=`<tr><td class="muted">${posLabel(ri,mi)}</td><td class="n">${pkCel(k)}</td><td>${duoNaam(a)} <span class="muted">${st(a)}</span></td><td>${duoNaam(b)} <span class="muted">${st(b)}</span></td></tr>`;
+  }
+  if(!ps.length) return "";
+  const d=verdeling(ps), n=ps.length, w=winstUit(d);
+  const kleur=i=>i*2>n?"var(--ok-soft)":i*2===n?"var(--warn-soft)":"var(--bad-soft)";
+  const bar=d.map((q,i)=>({q,i})).reverse().map(({q,i})=>q>0.005?`<span style="width:${(q*100).toFixed(1)}%;background:${kleur(i)}" title="${i}–${n-i}: ${pctTxt(q)}">${q>0.07?`${i}–${n-i} ${pctTxt(q)}`:""}</span>`:"").join("");
+  return `<h3 style="margin-top:6px">${titel} <span class="pk ${pkKl(w)}" style="font-size:1rem">${pctTxt(w)} winstkans</span></h3>
+    <div class="tablewrap"><table class="vs"><thead><tr><th>Match</th><th class="n">Kans BTC</th><th>BTC</th><th>${esc(String(o.tegen||"Tegenstander"))}</th></tr></thead><tbody>${rijen}</tbody></table></div>
+    <div class="bar" aria-label="Kansverdeling van de uitslag">${bar}</div>
+    <p class="footnote" style="margin-top:2px">Verwacht ${ps.reduce((a,b)=>a+b,0).toFixed(1)} van ${n} matchen gewonnen. Kans op ${d.map((q,i)=>`${i}–${n-i}: ${pctTxt(q)}`).reverse().join(" · ")}. Bij ${n/2}–${n/2} beslissen sets en games; dat telt hier als 50%.</p>`;
+}
+function renderScout(){
+  const v=$("scoutView"); v.classList.add("scout");
+  if(scout.laden){ v.innerHTML=`<p class="muted">Scouting laden…</p>`; return; }
+  if(scout.fout){ v.innerHTML=`<p class="muted">Scouting niet beschikbaar: ${esc(scout.fout)}.</p>`; return; }
+  const o=scoutOnt();
+  if(!o){ v.innerHTML=`<p class="muted">Nog geen scouting voor de volgende tegenstander van deze ploeg.</p>`; return; }
+  const c=C(), r=R();
+  const slot=Object.entries(wedstrijdenVanPloeg()).find(([,w])=>w.id===o.match_id)?.[0];
+  const d=slot?(plan.dagen[slot]||leegDag()):leegDag();
+  const onsAlle=plan.kern.map(id=>spelersMap.get(id)).filter(Boolean);
+  onsOff=mediaan(onsAlle.filter(p=>typeof p.st==="number"&&p.k).map(p=>p.st-p.k));
+  const ons=onsAlle.filter(p=>!d.afwezig.includes(p.id) && p.k<=r.kmax);
+  const tgn=[...tgnMap.values()].filter(p=>!p.k || p.k<=r.kmax);
+  const dt=new Date(String(o.datum).replace(" ","T"));
+  const wanneer=isNaN(dt)?"":dt.toLocaleDateString("nl-BE",{weekday:"short",day:"numeric",month:"long"})+" "+dt.toLocaleTimeString("nl-BE",{hour:"2-digit",minute:"2-digit"});
+  let html=`<div class="matchinfo"><span class="tegen">${o.tu==="thuis"?"Thuis tegen":"Uit bij"} ${esc(o.tegen||"?")}</span><span class="muted">${esc(wanneer)} · ${esc(o.ronde||"")}</span>${slot?`<span class="muted">Selectie: ${ons.length} beschikbaar volgens ${esc(SLOT_LABEL[slot])}</span>`:""}</div>`;
+  if(ons.length<2){ v.innerHTML=html+`<p class="muted">Kies eerst je selectie in de spelerslijst (en duid afwezigen aan op de speeldag).</p>`; return; }
+
+  // 1. Sterkste opstelling van beide ploegen op speelsterkte
+  const bo=voorstelPool(ons, stS), bt=voorstelPool(tgn, stS);
+  if(bo.opst && bt.opst) html+=ontmoetingTabel(o, bo.opst, bt.opst, "Sterkste tegen sterkste");
+  else html+=`<p class="muted">Geen sterkste opstelling te berekenen: ${esc((bo.fout||bt.fout||""))}</p>`;
+  const plan4=d.opst.slice(0,c.rot);
+  if(bt.opst && plan4.flat(2).filter(x=>x!=null).length===c.rot*4)
+    html+=ontmoetingTabel(o, plan4, bt.opst, `Jouw opstelling (${esc(SLOT_LABEL[slot]||"")}) tegen hun sterkste`);
+
+  // 2. Alle duo's van de tegenstander met een BTC-duo ertegenover
+  for(const [code,label,g1,g2] of duoTypes()){
+    const hun=duosVan(tgn,g1,g2), onze=duosVan(ons,g1,g2);
+    if(!hun.length) continue;
+    const rijen=hun.map(t=>{
+      const sk=o.match_id+":"+code+":"+t.key;
+      const gekozen=onze.find(x=>x.key===ui.scoutKeuze[sk]) || onze[0];
+      const opt=onze.map(x=>`<option value="${x.key}" ${gekozen&&x.key===gekozen.key?"selected":""}>${duoNaam(x.ids)} · ${x.st}</option>`).join("");
+      const k=gekozen?duoKans(o,gekozen.ids,t.ids):null;
+      return `<tr><td>${duoNaam(t.ids)}<br><span class="muted" style="font-size:.78rem">P${t.k} · sterkte ${t.st}</span></td>
+        <td class="n">${k?pkCel(k):"–"}</td>
+        <td>${onze.length?`<select data-sk="${sk}" aria-label="BTC-duo tegen ${esc(duoNaam(t.ids))}">${opt}</select><span class="gekozen">${duoNaam(gekozen.ids)} · ${gekozen.st}</span>`:'<span class="muted">geen duo in de selectie</span>'}</td></tr>`;
+    }).join("");
+    html+=`<h3 style="margin-top:6px">${label} <span class="muted" style="font-family:var(--f-body);font-size:.85rem;font-weight:600">· ${hun.length} duo's van de tegenstander</span></h3>
+      <div class="tablewrap"><table class="duo"><colgroup><col style="width:42%"><col style="width:76px"><col></colgroup><thead><tr><th>Tegenstander</th><th class="n">Kans BTC</th><th>BTC-duo</th></tr></thead><tbody>${rijen}</tbody></table></div>`;
+  }
+  const bijgewerkt=o.bijgewerkt?new Date(o.bijgewerkt).toLocaleDateString("nl-BE",{day:"numeric",month:"short"}):"";
+  const metSchat=[...tgnMap.values(),...ons].some(geschat);
+  html+=`<p class="footnote">Spelers van de tegenstander: wie in hun poule speelde (uitslagenbladen Tennis en Padel Vlaanderen); speelsterkte van padelstats.be${bijgewerkt?`, bijgewerkt ${bijgewerkt}`:""}. Winstkans per duel uit het verschil in speelsterkte, gekalibreerd op simulaties van padelstats.be; ± 5 procentpunt onzeker. "padelstats" = exact dit duel daar gesimuleerd. Standaard staat telkens je sterkste duo uit de selectie tegenover hen; kies een ander duo om te vergelijken. De duo-tabellen houden geen rekening met de puntengrenzen per rotatie; de opstellingen bovenaan wel.${metSchat?" * geen speelsterkte gekend: geschat als klassement plus het gewone verschil binnen de ploeg.":""} Namen van tegenstanders enkel intern, achter de clublogin.</p>`;
+  v.innerHTML=html;
+}
+
 function effDag(id){ return officieel(wedstrijdenVanPloeg()[id]) || plan.dagen[id] || leegDag(); }
 function slotHeeftIets(id){ const d=effDag(id); return d && (d.opst.flat(2).some(x=>x!=null)||d.afwezig.length||d.datum||d.tegen); }
 function renderTabs(){
@@ -788,9 +935,11 @@ function renderTabs(){
     const f=b.dataset.fase, n=FASES[f].slots.filter(([id])=>w[id]||slotHeeftIets(id)).length;
     b.setAttribute("aria-pressed",f===fase); b.textContent=FASES[f].label+(n&&f!==fase?` (${n})`:""); });
   const standTab = fase==="poule" ? `<button class="tab" role="tab" aria-selected="${ui.slot==="stand"}" data-slot="stand">Klassement${ploegen[ui.ploegId]?.poule?.naam?`<small>${esc(String(ploegen[ui.ploegId].poule.naam).replace(/\s*-\s*plaats.*$/i,""))}</small>`:""}</button>` : "";
+  const so=scoutOnt();
+  const scoutTab = so ? `<button class="tab" role="tab" aria-selected="${ui.slot==="scout"}" data-slot="scout">Scouting<small>${esc(String(so.tegen||"").replace(/\s*\([^)]*\)\s*$/,""))}</small></button>` : "";
   $("tabs").innerHTML=FASES[fase].slots.map(([id,label])=>{ const d=effDag(id), st=status(d), x=w[id];
     const sub=x?`${datumKort(String(x.datum).slice(0,10))} · ${x.tu==="thuis"?"thuis":"uit"}`:(d?.datum?datumKort(d.datum):"");
-    return `<button class="tab" role="tab" aria-selected="${id===ui.slot}" data-slot="${id}">${esc(label)}<span class="dot ${st}" title="${({ok:"In orde",warn:"Let op",bad:"Fout",leeg:"Leeg"})[st]}"></span>${sub?`<small>${esc(sub)}</small>`:""}</button>`;}).join("")+standTab;
+    return `<button class="tab" role="tab" aria-selected="${id===ui.slot}" data-slot="${id}">${esc(label)}<span class="dot ${st}" title="${({ok:"In orde",warn:"Let op",bad:"Fout",leeg:"Leeg"})[st]}"></span>${sub?`<small>${esc(sub)}</small>`:""}</button>`;}).join("")+standTab+scoutTab;
 }
 
 // Korte naam in de keuzelijsten: "Achternaam V." (voornaam staat achteraan in de ledenlijst)
@@ -804,9 +953,10 @@ function opties(ri,mi,si,huidig){
 }
 
 function renderDag(){
-  const toonStand = ui.slot==="stand";
-  $("standView").hidden=!toonStand; $("dagView").hidden=toonStand;
+  const toonStand = ui.slot==="stand", toonScout = ui.slot==="scout";
+  $("standView").hidden=!toonStand; $("scoutView").hidden=!toonScout; $("dagView").hidden=toonStand||toonScout;
   if(toonStand){ renderStand(); return; }
+  if(toonScout){ renderScout(); return; }
   const x=wedstrijdenVanPloeg()[ui.slot], d=effDag(ui.slot), c=C(), r=R(), ro=(!kanSchrijven&&!demo&&planPad)||d.officieel;
   if(x){
     const dt=new Date(String(x.datum).replace(" ","T"));
@@ -900,6 +1050,8 @@ function renderInzet(){
 
 function render(herkies=true){
   if(herkies) kiesPlan();
+  if(ui.slot==="scout" && scout.ploegId===ui.ploegId && !scout.laden && !scoutOnt()) ui.slot=eersteSlot();
+  laadScout();
   renderConfig(); renderStatus(); renderSpelers(); renderTabs(); renderDag(); renderInzet(); zetPanelen(); bewaarUi();
 }
 
@@ -916,6 +1068,8 @@ $("fases").addEventListener("click",e=>{const b=e.target.closest("[data-fase]");
 $("plist").addEventListener("change",e=>{const v=e.target.dataset.kern; if(v==null) return; if(spelersOpen===null) spelersOpen=true;   // niet dichtklappen terwijl je kiest
   const id=+v, K=plan.kern, i=K.indexOf(id);
   if(e.target.checked&&i<0) K.push(id); if(!e.target.checked&&i>=0) K.splice(i,1); wijziging();});
+$("scoutView").addEventListener("change",e=>{ const s=e.target.closest("select[data-sk]"); if(!s) return;
+  ui.scoutKeuze[s.dataset.sk]=s.value; bewaarUi(); renderScout(); });
 $("tabs").addEventListener("click",e=>{const b=e.target.closest("[data-slot]"); if(!b) return; ui.slot=b.dataset.slot; render(false);});
 $("datum").addEventListener("change",e=>{dag().datum=e.target.value; wijziging();});
 $("tegen").addEventListener("input",e=>{dag().tegen=e.target.value; wijziging(false);});

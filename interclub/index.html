@@ -178,6 +178,21 @@ details.later>summary::before{content:"▸";transition:transform .15s}
 details.later[open]>summary::before{transform:rotate(90deg)}
 details.later>summary span{color:var(--muted);font-weight:500}
 details.later>div{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+.wed .wd{grid-column:1/-1;border-top:1px dashed var(--line);margin-top:4px;padding-top:6px}
+.wed .wd summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);list-style:none;display:inline-flex;align-items:center;gap:6px}
+.wed .wd summary::-webkit-details-marker{display:none}
+.wed .wd summary::after{content:"▾";transition:transform .15s}
+.wed .wd[open] summary::after{transform:rotate(180deg)}
+.wed .wd-body{display:grid;gap:6px;margin-top:6px}
+.wed .wd-rij{display:grid;grid-template-columns:2.2em 1fr auto 1.4em;gap:2px 8px;align-items:center;font-size:13px}
+.wed .wd-nr{font:700 13px var(--display);color:var(--muted)}
+.wed .wd-wie b{display:block;font-weight:600}
+.wed .wd-wie span{color:var(--muted);font-size:12px}
+.wed .wd-score{font-variant-numeric:tabular-nums;white-space:nowrap}
+.wed .wd-uit{font:700 13px var(--display);text-align:center}
+.wed .wd-rij.w .wd-uit{color:var(--turf)} .wed .wd-rij.v .wd-uit{color:var(--err)}
+.wed .wd .leeg{font-size:12px;color:var(--muted);font-style:italic;margin:0}
+@media (max-width:520px){.wed .wd{grid-column:1/-1}.wed .wd-rij{grid-template-columns:2em 1fr 1.4em}.wed .wd-score{grid-column:2;grid-row:2}}
 .uitslagen{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px 12px}
 .uitslagen .wed+.wed{margin-top:0}
 .meters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
@@ -780,6 +795,9 @@ footer{font-size:13px;color:var(--muted);text-align:center}
         const [r, k] = await Promise.all([rpc("club_ic_resultaten", {p_token:TOKEN}), kal ? kal : rpc("club_ic_kalender", {p_token:TOKEN})]);
         if(r.fout) throw new Error(r.fout);
         if(!k.fout) kal = k;
+        // club_ic_resultaten geeft enkel gespeelde ontmoetingen terug, maar zonder de vlag 'gespeeld':
+        // zonder deze regel toonde de kaart "Uitslag volgt" terwijl de meters wel de score hadden.
+        (r.wedstrijden || []).forEach(w => { if(w.gespeeld === undefined) w.gespeeld = w.matchen_voor != null; });
         res = r;
       }
       catch(e){ res = null; if(e.message!=="niet aangemeld"){ box.textContent = ""; box.appendChild(el("p",{class:"notice","data-kind":"err",text:"Laden lukte niet: " + e.message})); } return; }
@@ -811,6 +829,38 @@ footer{font-size:13px;color:var(--muted);text-align:center}
         twee("Sets", som("sets_voor"), som("sets_tegen"), "sets"),
         twee("Games", som("games_voor"), som("games_tegen"), "games")));
   }
+  // Uitklapbare lijst met de afzonderlijke wedstrijden van een ontmoeting (geladen bij het openen).
+  // De score komt van Tennis en Padel Vlaanderen vanuit het standpunt van de winnaar; bij verlies
+  // draaien we elke set om zodat de score altijd vanuit BTC gelezen wordt. Tegenstanders: enkel klassement.
+  const detailCache = {};
+  const btcScore = (score, gewonnen) => gewonnen ? String(score||"")
+    : String(score||"").replace(/(\d+)\/(\d+)/g, (m, a, b) => b + "/" + a);
+  function detailWedstrijden(w){
+    const sleutel = w.match_id + "-" + w.ploeg_id;
+    const body = el("div",{class:"wd-body"});
+    const det = el("details",{class:"wd"}, el("summary",{text:"Wedstrijden"}), body);
+    det.addEventListener("toggle", async () => {
+      if(!det.open || body.dataset.geladen) return;
+      body.textContent = ""; body.appendChild(el("p",{class:"leeg",text:"Laden…"}));
+      try{
+        const d = detailCache[sleutel] || await rpc("club_ic_ontmoeting", {p_token:TOKEN, p_match_id:w.match_id, p_ploeg_id:w.ploeg_id});
+        if(d.fout) throw new Error(d.fout);
+        detailCache[sleutel] = d; body.dataset.geladen = "1"; body.textContent = "";
+        if(!d.wedstrijden.length){ body.appendChild(el("p",{class:"leeg",text:"De wedstrijddetails zijn nog niet binnen. Ze volgen meestal een dag na de uitslag."})); return; }
+        d.wedstrijden.forEach(x => {
+          const kort = (x.soort === "Enkel" ? "E" : "D") + x.nr;
+          body.appendChild(el("div",{class:"wd-rij " + (x.gewonnen ? "w" : "v")},
+            el("span",{class:"wd-nr",text:kort}),
+            el("div",{class:"wd-wie"},
+              el("b",{text:x.btc.map(p => p.naam + " (" + p.klassement + ")").join(" / ")}),
+              el("span",{text:"tegen " + ((x.tegen && x.tegen.length) ? x.tegen.join(" + ") : "onbekend klassement")})),
+            el("span",{class:"wd-score",text:btcScore(x.score, x.gewonnen)}),
+            el("span",{class:"wd-uit",title:x.gewonnen ? "gewonnen" : "verloren",text:x.gewonnen ? "W" : "V"})));
+        });
+      }catch(e){ body.textContent = ""; if(e.message!=="niet aangemeld") body.appendChild(el("p",{class:"leeg",text:"Laden lukte niet: " + e.message})); }
+    });
+    return det;
+  }
   function toonResultaten(){
     const box = $("resLijst"); box.textContent = "";
     const enkelMijn = document.querySelector("input[name=resFilter]:checked").value==="mijn";
@@ -823,7 +873,8 @@ footer{font-size:13px;color:var(--muted);text-align:center}
       return el("div",{class:"wed" + (w.mijn ? " mijn" : "") + (w.thuis_uit==="thuis" ? " thuis" : "")},
         el("span",{class:"uur",style:"font-size:14px",text:links}),
         el("div",{class:"ploegen"}, el("b",{}, thuisLogo(w, "logo"), titelVan(w)), el("span",{text:[w.thuis_uit==="thuis" ? null : "Uit", w.ronde].filter(Boolean).join(" · ")})),
-        el("div",{class:"rechts"}, rechts));
+        el("div",{class:"rechts"}, rechts),
+        w.gespeeld ? detailWedstrijden(w) : null);
     };
     const wie = enkelMijn ? "Mijn ploegen" : "BTC";
 

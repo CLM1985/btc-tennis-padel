@@ -731,25 +731,22 @@ footer{font-size:13px;color:var(--muted);text-align:center}
   const langDag = d => d.toLocaleDateString("nl-BE",{weekday:"short",day:"numeric",month:"long"}).replace(".","");
   const thuisLogo = (w, kl) => w.thuis_uit==="thuis" ? el("img",{class:kl,src:"../app/logo-btc.jpg",alt:"Thuis op BTC Wemmel",width:"18",height:"26"}) : null;
   const titelVan = w => ploegKort(w.ploeg) + (w.thuis_uit==="thuis" ? " – " : " @ ") + w.tegenstander;
-  // Kalenderrijen hebben geen sets/games: vul aan uit de resultaten als die al geladen zijn.
+  // Kalenderrijen van vóór de update hebben soms geen sets/games: vul aan uit de resultaten.
   const metCijfers = w => {
     if(w.sets_voor != null || !res) return w;
     const r = res.wedstrijden.find(x => x.match_id===w.match_id && x.ploeg_id===w.ploeg_id);
-    return r ? Object.assign({}, w, {sets_voor:r.sets_voor, sets_tegen:r.sets_tegen, games_voor:r.games_voor, games_tegen:r.games_tegen}) : w;
+    return r ? Object.assign({}, r, w, {sets_voor:r.sets_voor, sets_tegen:r.sets_tegen, games_voor:r.games_voor, games_tegen:r.games_tegen, uitkomst:r.uitkomst, beslist_door:r.beslist_door}) : w;
   };
-  // Knock-outronde (1/16 Finale … Finale): bij gelijke matchen beslissen de sets, daarna de games.
-  // In een poule blijft gelijk gewoon gelijk.
+  // Uitkomst komt uit de database (public.ic_uitkomst, reglement 2026 art. 10.2):
+  // najaar 2-2 in de eindronde -> sets, games, 3e wedstrijd; voorjaar 3-3 -> (sets enkel Open 700/1000 en Dames 500),
+  // games, 5e wedstrijd. In een poule blijft gelijk gelijk. Zonder veld 'uitkomst': enkel op matchen.
   const knockout = w => /finale/i.test(w.ronde || "");
   const uitkomst = w => {
-    const a = w.matchen_voor, b = w.matchen_tegen;
-    if(a > b) return "w"; if(a < b) return "v";
-    if(!knockout(w)) return "";
-    if(w.sets_voor != null && w.sets_voor !== w.sets_tegen) return w.sets_voor > w.sets_tegen ? "w" : "v";
-    if(w.games_voor != null && w.games_voor !== w.games_tegen) return w.games_voor > w.games_tegen ? "w" : "v";
-    return "";
+    if(w.uitkomst) return w.uitkomst === "g" ? "" : w.uitkomst;
+    return w.matchen_voor > w.matchen_tegen ? "w" : w.matchen_voor < w.matchen_tegen ? "v" : "";
   };
   const winstKlasse = uitkomst;
-  // Scoreblok: matchen groot; bij gelijke stand eronder sets en games, met wie doorgaat in de knock-out.
+  // Scoreblok: matchen groot; bij gelijke stand eronder sets en games, en in de eindronde wie doorgaat en waarop.
   function scoreBlok(w0){
     const w = metCijfers(w0), u = uitkomst(w);
     const s = el("span",{class:"score " + u,text:w.matchen_voor + "–" + w.matchen_tegen});
@@ -757,10 +754,13 @@ footer{font-size:13px;color:var(--muted);text-align:center}
     const delen = [];
     if(w.sets_voor != null) delen.push(w.sets_voor + "–" + w.sets_tegen + " sets");
     if(w.games_voor != null) delen.push(w.games_voor + "–" + w.games_tegen + " games");
-    const doorgang = knockout(w) && u ? (u==="w" ? "BTC door" : "uitgeschakeld") : null;
+    let doorgang = null;
+    if(knockout(w) && u) doorgang = (u==="w" ? "BTC door" : "uitgeschakeld") + (w.beslist_door ? " op " + w.beslist_door : "");
+    else if(knockout(w) && w.beslist_door === "onbekend") doorgang = "beslissing volgt";
     if(!delen.length && !doorgang) return s;
     return el("span",{class:"score-blok"}, s,
-      el("span",{class:"beslist " + u,text:[delen.join(" · "), doorgang].filter(Boolean).join(" · ")}));
+      el("span",{class:"beslist " + u,text:delen.join(" · ")}),
+      doorgang ? el("span",{class:"beslist " + u,text:doorgang}) : null);
   }
   const voorbij = w => new Date(String(w.datum).slice(0,19)) < new Date();
   const inWeek = (ma, w) => { const k = String(w.datum).slice(0,10); return k >= isoDag(ma) && k < isoDag(plusDagen(ma, 7)); };

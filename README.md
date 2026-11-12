@@ -138,7 +138,7 @@ Privacy: `ladder_mijn` registreert enkel de actieve dag per speler (opvolging la
 - Volledige naam en klassement zichtbaar voor aangemelde leden. Meldingen via `club.meldingen`; melding bij nieuwe oproepen is opt-in.
 - Functies: `club_zoeker`, `club_zoeker_plaats`, `club_zoeker_doe_mee`, `club_zoeker_afmelden`, `club_zoeker_annuleer`,
   `club_zoeker_terrein`, `club_zoeker_meldingen`. Script: `sql/01_Governance_Clublogin_spelerszoeker.sql`.
-- Tabblad **WhatsApp-groepen** (`spelerszoeker/#whatsapp`, QR-code op de affiche in het clubhuis): de uitnodigingslink van een
-  niveaugroep komt pas na controle uit de database (`club_wa_link`). Toegang: groep van het eigen niveau + de groep net daaronder;
-  speelsterkte telt mee als ze hoger is dan het klassement; de hoogste groep staat open voor alle hogere niveaus.
-  Commissie/beheerders stellen de links in op dezelfde pagina (`club_wa_beheer`). Script: `sql/01_Governance_Clublogin_whatsapp.sql`.
+- **WhatsApp-groepen per niveau**: op de startpagina (Samen spelen, onder Spelerszoeker) de knop **WhatsApp-groepen**: bij één toegelaten groep meteen naar die groep, bij meerdere eerst kiezen. Toegang
+  (eigen niveau + de groep net daaronder; hogere speelsterkte telt mee; hoogste groep open voor alle hogere niveaus).
+  De uitnodigingslink komt pas bij een klik uit de database (`club_wa_link`, gelogd). Links instellen: Beheer → WhatsApp-groepen
+  (`club_wa_beheer`). Script: `sql/01_Governance_Clublogin_whatsapp.sql`.

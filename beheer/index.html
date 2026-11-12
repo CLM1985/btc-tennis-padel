@@ -193,6 +193,7 @@ details.tabel > summary{font-size:13px;color:var(--accent);font-weight:600;curso
       <button class="tab" role="tab" data-k="kapiteins" aria-selected="false">Kapiteins</button>
       <button class="tab" role="tab" data-k="logboek" aria-selected="false">Logboek</button>
       <button class="tab" role="tab" data-k="gebruik" aria-selected="false">Gebruik</button>
+      <button class="tab" role="tab" data-k="whatsapp" aria-selected="false">WhatsApp-groepen</button>
     </div>
 
     <div id="v-leden" class="card">
@@ -257,6 +258,13 @@ details.tabel > summary{font-size:13px;color:var(--accent);font-weight:600;curso
         <details class="tabel"><summary id="gNietSum">Niet actief in de periode</summary><div class="tbl" id="gNiet"></div></details>
       </section>
       <p class="g-noot">Wat wordt bijgehouden: per dag, per lid en per pagina (of tabblad) het aantal bezoeken en of het een gsm of computer was. Geen IP-adres, geen uur, geen inhoud. Bezoeken in de voorbeeldmodus tellen niet mee. Gegevens worden na 12 maanden gewist.</p>
+    </div>
+
+    <div id="v-whatsapp" class="card" hidden>
+      <h2>WhatsApp-groepen</h2>
+      <p class="msg">Uitnodigingslink per niveaugroep (in WhatsApp: groepsinfo → Uitnodigen via link). Leden zien op de startpagina, onder Samen spelen, de knop WhatsApp-groepen met enkel de groepen waar ze in mogen: hun eigen niveau en de groep net daaronder; een hogere speelsterkte telt mee. De link zelf staat nergens op de site. Gaat een link rond: reset hem in WhatsApp en vul hier de nieuwe in. Zet in elke groep ook "Nieuwe deelnemers goedkeuren" aan.</p>
+      <div id="watabel"></div>
+      <p id="wamsg" class="msg" role="status"></p>
     </div>
 
     <div id="v-logboek" class="card" hidden>
@@ -331,7 +339,8 @@ async function start() {
 document.querySelector(".tabs").addEventListener("click", e => {
   const b = e.target.closest(".tab"); if (!b) return;
   document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", String(x === b)));
-  ["leden","kapiteins","logboek","gebruik"].forEach(k => $("v-" + k).hidden = k !== b.dataset.k);
+  ["leden","kapiteins","logboek","gebruik","whatsapp"].forEach(k => $("v-" + k).hidden = k !== b.dataset.k);
+  if (b.dataset.k === "whatsapp") waGroepen();
   if (b.dataset.k === "kapiteins") kapiteins();
   if (b.dataset.k === "logboek") logboek();
   if (b.dataset.k === "gebruik") gebruik();
@@ -401,6 +410,24 @@ $("ktabel").addEventListener("click", async e => {
   const r = await rpc("club_beheer_koppel", { p_token: token, p_ploeg: id, p_speler: v ? +v : null });
   if (r.fout) { $("kmsg").className = "err"; $("kmsg").textContent = r.fout; return; }
   kapiteins();
+});
+
+// ---- WhatsApp-groepen ----
+async function waGroepen() {
+  const r = await rpc("club_wa_groepen", { p_token: token });
+  if (r.fout) { $("watabel").innerHTML = `<p class="err">${esc(r.fout)}</p>`; return; }
+  $("watabel").innerHTML = `<div class="tbl"><table><thead><tr><th>Groep</th><th>Uitnodigingslink</th><th></th></tr></thead><tbody>${r.groepen.map(g => `
+    <tr><td style="white-space:nowrap"><b>${esc(g.naam)}</b></td>
+      <td><input id="wa${g.id}" type="url" style="width:100%;min-width:16em" placeholder="https://chat.whatsapp.com/…" value="${esc(g.link || "")}" aria-label="Uitnodigingslink ${esc(g.naam)}"></td>
+      <td><button class="btn ghost" data-wa="${g.id}" type="button">Bewaar</button></td></tr>`).join("")}</tbody></table></div>`;
+}
+$("watabel").addEventListener("click", async e => {
+  const b = e.target.closest("[data-wa]"); if (!b) return;
+  const id = +b.dataset.wa, v = $("wa" + id).value.trim();
+  const r = await rpc("club_wa_beheer", { p_token: token, p_groep: id, p_link: v || null });
+  if (r.fout) { $("wamsg").className = "err"; $("wamsg").textContent = r.fout; return; }
+  $("wamsg").className = "msg"; $("wamsg").textContent = v ? "Link bewaard." : "Link verwijderd: de groep is niet meer zichtbaar voor leden.";
+  waGroepen();
 });
 
 // ---- logboek ----

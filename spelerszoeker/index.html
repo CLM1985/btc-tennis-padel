@@ -97,6 +97,12 @@ legend{padding:0;margin-bottom:8px}
 .rond.plus{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .schakel{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;font-weight:600}
 .schakel input{width:22px;height:22px;accent-color:var(--accent);flex:none}
+.wa{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--padel);border-radius:14px;padding:12px 16px}
+.wa.dicht{background:transparent;border:1.5px dashed var(--rand)}
+.wa .naam{font-family:var(--f-display);font-weight:800;font-size:1.25rem}
+.wa .reden{font-size:.82rem;color:var(--muted)}
+.wa-beheer{display:flex;gap:8px;margin-top:8px}
+.wa-beheer input{flex:1;min-width:0;min-height:44px;border:1.5px solid var(--rand);border-radius:10px;background:var(--surface);padding:0 10px;font-size:.85rem}
 .voet{border-top:1px solid var(--line);padding-top:14px}
 @media (max-width:420px){.rij3{grid-template-columns:1fr 1fr}.rij3 .veld:first-child{grid-column:1/-1}}
 </style>
@@ -114,6 +120,7 @@ legend{padding:0;margin-bottom:8px}
   <nav class="tabs" role="tablist" aria-label="Weergave">
     <button type="button" role="tab" data-tab="voor" aria-selected="true" id="tabVoor">Voor mij</button>
     <button type="button" role="tab" data-tab="mijn" aria-selected="false" id="tabMijn">Mijn speelmomenten</button>
+    <button type="button" role="tab" data-tab="whatsapp" aria-selected="false" id="tabWa">WhatsApp-groepen</button>
   </nav>
   <p class="melding" id="melding" role="status" aria-live="polite"></p>
 
@@ -124,6 +131,12 @@ legend{padding:0;margin-bottom:8px}
 
   <section id="v-mijn" hidden style="display:flex;flex-direction:column;gap:12px">
     <div id="lijstMijn" style="display:flex;flex-direction:column;gap:12px"></div>
+  </section>
+
+  <section id="v-whatsapp" hidden style="display:flex;flex-direction:column;gap:12px">
+    <p class="muted" style="margin:0;font-size:.85rem" id="waIk"></p>
+    <div id="waLijst" style="display:flex;flex-direction:column;gap:10px"></div>
+    <p class="muted" style="margin:0;font-size:.8rem">Je mag in de groep van je klassement en in de groep net daaronder. Is je speelsterkte hoger dan je klassement, dan telt die ook. Nieuwe leden van een groep worden goedgekeurd door de beheerder van de groep.</p>
   </section>
 
   <section id="v-nieuw" hidden>
@@ -252,8 +265,46 @@ function toon() {
 function kiesTab(t) {
   TAB = t;
   document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
-  $("v-voor").hidden = t !== "voor"; $("v-mijn").hidden = t !== "mijn";
+  $("v-voor").hidden = t !== "voor"; $("v-mijn").hidden = t !== "mijn"; $("v-whatsapp").hidden = t !== "whatsapp";
+  $("btnNieuw").parentElement.hidden = t === "whatsapp";
+  if (t === "whatsapp") laadWa();
 }
+
+/* ---------------------------------------------------------------- WhatsApp-groepen per niveau
+   De uitnodigingslink komt enkel uit de database na de niveaucontrole (club_wa_link). */
+let WA = null;
+async function laadWa() {
+  try {
+    WA = await rpc("club_wa_groepen");
+    if (WA.fout) { melding(WA.fout, "fout"); return; }
+    const ik = WA.ik;
+    $("waIk").textContent = `Jouw klassement: P${ik.klassement}` + (ik.speelsterkte && ik.speelsterkte > ik.klassement ? ` · speelsterkte ${ik.speelsterkte}` : "") + ".";
+    $("waLijst").innerHTML = WA.groepen.map((g) => `<div>
+      <div class="wa${g.toegang ? "" : " dicht"}">
+        <div><div class="naam">${esc(g.naam)}</div>${g.toegang ? (g.heeft_link ? "" : '<div class="reden">Link volgt binnenkort</div>') : `<div class="reden">Niet voor jou: ${esc(g.reden)}</div>`}</div>
+        ${g.toegang && g.heeft_link ? `<button type="button" class="knop hoofd" data-wa="${g.id}">Word lid</button>` : ""}
+      </div>
+      ${WA.beheer ? `<div class="wa-beheer"><label class="sr" style="position:absolute;left:-9999px" for="waL${g.id}">Uitnodigingslink ${esc(g.naam)}</label><input id="waL${g.id}" type="url" placeholder="https://chat.whatsapp.com/…" value="${esc(g.link || "")}"><button type="button" class="knop" data-wa-bewaar="${g.id}">Bewaar</button></div>` : ""}
+    </div>`).join("");
+  } catch (e) { if (e.message !== "niet aangemeld") melding("Laden mislukt: " + e.message, "fout"); }
+}
+$("waLijst").addEventListener("click", async (e) => {
+  const lid = e.target.closest("[data-wa]"), bew = e.target.closest("[data-wa-bewaar]");
+  if (lid) {
+    lid.disabled = true;
+    try {
+      const r = await rpc("club_wa_link", { p_groep: Number(lid.dataset.wa) });
+      if (r.fout) melding(r.fout.charAt(0).toUpperCase() + r.fout.slice(1) + ".", "fout");
+      else location.href = r.link;
+    } catch (err) { if (err.message !== "niet aangemeld") melding("Mislukt: " + err.message, "fout"); }
+    lid.disabled = false;
+  }
+  if (bew) {
+    const id = Number(bew.dataset.waBewaar);
+    const r = await rpc("club_wa_beheer", { p_groep: id, p_link: $("waL" + id).value.trim() || null });
+    if (r.fout) melding(r.fout, "fout"); else { melding("Link bewaard.", "ok"); laadWa(); }
+  }
+});
 async function laad() {
   try {
     D = await rpc("club_zoeker");
@@ -392,6 +443,7 @@ $("optMeld").addEventListener("change", async (e) => {
 });
 document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => { kiesTab(b.dataset.tab); melding(""); }));
 if (location.hash === "#mijn") kiesTab("mijn");
+if (location.hash === "#whatsapp") kiesTab("whatsapp");
 laad();
 })();
 </script>

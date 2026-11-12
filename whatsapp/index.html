@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<script src="../thema.js"></script>
+<script src="../toegang.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#152B46">
+<link rel="icon" type="image/png" sizes="48x48" href="../app/favicon-48.png">
+<link rel="apple-touch-icon" href="../app/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="BTC Padel">
+<script>if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("../sw.js",{scope:"../"}).catch(function(){})});</script>
+<meta name="robots" content="noindex">
+<title>BTC WhatsApp-groepen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@600;700;800&family=Montserrat:wght@400;500;600;700&display=swap">
+<style>
+/* WhatsApp-groepen per niveau. Toegang en uitnodigingslinks komen uit de database (club_wa_groepen, club_wa_link);
+   de links zelf staan nooit in deze pagina. */
+:root{
+  --bg:#F3F1E9; --surface:#FAF9F4; --ink:#152B46; --muted:#5A6676; --line:#DCE4D2;
+  --accent:#435B28; --on-accent:#F3F1E9; --padel:#DFE7EE; --lime:#C5E75A; --rand:#9AA89A;
+  --f-display:"League Spartan","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1A2A; --surface:#15263B; --ink:#F3F1E9; --muted:#A3B1C1; --line:#2A3D55;
+  --accent:#C5E75A; --on-accent:#152B46; --padel:#1E3149; --rand:#4A5D75; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1A2A; --surface:#15263B; --ink:#F3F1E9; --muted:#A3B1C1; --line:#2A3D55;
+  --accent:#C5E75A; --on-accent:#152B46; --padel:#1E3149; --rand:#4A5D75; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--f-display);font-weight:800;font-size:2rem;margin:0}
+.muted{color:var(--muted)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.groepen{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.groep{display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;text-align:left;font:inherit;color:inherit;
+  background:var(--padel);border:2px solid transparent;border-radius:14px;padding:16px;cursor:pointer;min-height:96px}
+.groep:hover{border-color:var(--accent)}
+.groep .naam{font-family:var(--f-display);font-weight:800;font-size:1.5rem;line-height:1.1}
+.groep .sub{font-size:.85rem;font-weight:600;color:var(--accent)}
+.groep .sub::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--lime);margin-right:7px;vertical-align:middle}
+.groep.dicht{filter:grayscale(1);opacity:.55;background:var(--surface);border:2px dashed var(--rand)}
+.groep.dicht .sub{color:var(--muted)}
+.groep.dicht .sub::before{background:var(--rand)}
+.groep.dicht:hover{opacity:.75;border-color:var(--rand)}
+.uitleg{margin:0;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--ink);border-radius:10px;padding:12px 14px;font-size:.92rem}
+.uitleg:empty{display:none}
+.uitleg.fout{border-left-color:#A5432A}
+.noot{font-size:.82rem;color:var(--muted);margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top"><h1>WhatsApp-groepen</h1></header>
+  <p class="muted" style="margin:0">Zoek spelers via WhatsApp, op jouw niveau. Tik op een groep om lid te worden.</p>
+  <p class="muted" style="margin:0;font-size:.88rem" id="ik"></p>
+  <p class="uitleg" id="uitleg" role="status" aria-live="polite"></p>
+  <div class="groepen" id="groepen"><p class="muted">Laden…</p></div>
+  <p class="noot">Je mag in de groep van je klassement en in de groep net daaronder. Is je speelsterkte hoger dan je klassement, dan telt die ook. De beheerder van de groep keurt nieuwe leden goed.</p>
+</div>
+
+<script>
+(() => {
+const API = "https://povgjkvmzfrhhaxfanwn.supabase.co/rest/v1/rpc/", KEY = "sb_publishable_LfcbY6X1DgOBFW1rH3Umnw__RdObpur";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+let G = [], IK = null;
+
+async function rpc(fn, args) {
+  const r = await fetch(API + fn, { method: "POST", cache: "no-store", headers: { apikey: KEY, Authorization: "Bearer " + KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_token: BTC.token, ...(args || {}) }) });
+  if (!r.ok) throw new Error("de server antwoordt niet (" + r.status + ")");
+  const j = await r.json();
+  if (j && j.fout === "niet aangemeld") { BTC.naarLogin(); throw new Error("niet aangemeld"); }
+  return j;
+}
+function uitleg(t, fout) { const u = $("uitleg"); u.innerHTML = t || ""; u.className = "uitleg" + (fout ? " fout" : ""); if (t) u.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+
+/* Waarom een groep dicht is, in gewone taal */
+function waarom(g) {
+  const k = "P" + IK.klassement, s = IK.speelsterkte && IK.speelsterkte > IK.klassement ? ` en je speelsterkte is ${IK.speelsterkte}` : "";
+  if (g.reden && g.reden.indexOf("vanaf") === 0)
+    return `<b>${esc(g.naam)} is niet voor jou.</b> Je klassement is ${k}${s}. Deze groep is voor spelers ${esc(g.reden)}. Haal je dat niveau, dan gaat de groep automatisch open.`;
+  return `<b>${esc(g.naam)} is niet voor jou.</b> Je klassement is ${k}. Deze groep is voor lagere niveaus: je mag in de groep van je eigen niveau en in de groep net daaronder.`;
+}
+
+async function laad() {
+  try {
+    const r = await rpc("club_wa_groepen");
+    if (r.fout) { uitleg(esc(r.fout), true); return; }
+    G = r.groepen; IK = r.ik;
+    $("ik").textContent = `Jouw klassement: P${IK.klassement}` + (IK.speelsterkte && IK.speelsterkte > IK.klassement ? ` · speelsterkte ${IK.speelsterkte}` : "") + ".";
+    $("groepen").innerHTML = G.map((g) => {
+      const open = g.toegang;
+      const sub = !open ? "Niet voor jouw niveau" : g.heeft_link ? "Word lid" : "Link volgt binnenkort";
+      return `<button type="button" class="groep${open ? "" : " dicht"}" data-id="${g.id}" aria-describedby="uitleg">
+        <span class="naam">${esc(g.naam)}</span><span class="sub">${sub}</span></button>`;
+    }).join("");
+  } catch (e) { if (e.message !== "niet aangemeld") uitleg("Laden mislukt: " + esc(e.message), true); }
+}
+
+$("groepen").addEventListener("click", async (e) => {
+  const b = e.target.closest(".groep"); if (!b) return;
+  const g = G.find((x) => x.id === Number(b.dataset.id)); if (!g) return;
+  if (!g.toegang) { uitleg(waarom(g)); return; }
+  if (!g.heeft_link) { uitleg(`<b>${esc(g.naam)}</b>: de commissie heeft de link van deze groep nog niet ingesteld. Probeer later opnieuw.`); return; }
+  uitleg("WhatsApp wordt geopend…");
+  try {
+    const r = await rpc("club_wa_link", { p_groep: g.id });
+    if (r.ok && r.link) { location.href = r.link; return; }
+    uitleg(esc(r.fout ? r.fout.charAt(0).toUpperCase() + r.fout.slice(1) + "." : "Niet gelukt."), true);
+  } catch (err) { if (err.message !== "niet aangemeld") uitleg("Niet gelukt: " + esc(err.message), true); }
+});
+
+laad();
+})();
+</script>
+</body>
+</html>

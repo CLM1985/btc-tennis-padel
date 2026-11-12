@@ -215,8 +215,7 @@ a.wk.thuis{background:#DCE4D2;border-color:var(--accent)}
   <h2>Samen spelen</h2>
   <nav class="links" aria-label="Samen spelen">
     <a class="lk" href="spelerszoeker/"><b>Spelerszoeker</b><span>Zoek medespelers of doe mee met een oproep</span></a>
-    <a class="lk" href="#" id="lkWa" hidden aria-expanded="false" aria-controls="waKeuze"><b>WhatsApp-groepen</b><span id="waUitleg">Spelers zoeken via WhatsApp, op jouw niveau</span></a>
-    <div id="waKeuze" hidden style="display:grid;gap:8px"></div>
+    <a class="lk" href="whatsapp/"><b>WhatsApp-groepen</b><span>Spelers zoeken via WhatsApp, op jouw niveau</span></a>
   </nav>
   </div>
   <div class="groep groep-interclub">
@@ -326,7 +325,7 @@ async function rpc(fn,args){
 // Na aanmelden terug naar de pagina waar je vandaan kwam (enkel pagina's van deze site)
 function terug(){
   const t=new URLSearchParams(location.search).get("terug")||"";
-  return /^(ladder-inschrijving|tornooien|lessen|interclub|opstellingsplanner|klassementsimulator|beheer|spelerszoeker)\/([a-z-]+\.html)?(#[A-Za-z0-9-]*)?$/.test(t)?t:null;
+  return /^(ladder-inschrijving|tornooien|lessen|interclub|opstellingsplanner|klassementsimulator|beheer|spelerszoeker|whatsapp)\/([a-z-]+\.html)?(#[A-Za-z0-9-]*)?$/.test(t)?t:null;
 }
 function toonLogin(){ document.body.classList.remove("aangemeld"); $("vbBlok").hidden=true; $("blokBeheer").hidden=true; $("instDagen").hidden=true; $("agenda").hidden=true; $("meld").hidden=true; $("login").hidden=false; $("publiek").hidden=false; $("menu").hidden=true; $("wie").hidden=true; $("laden").hidden=true; }
 async function toonMenu(){
@@ -345,7 +344,6 @@ async function toonMenu(){
   $("login").hidden=true; $("publiek").hidden=true; $("menu").hidden=false; $("laden").hidden=true; $("instDagen").hidden=false; $("meld").hidden=false; $("agenda").hidden=false; toonAgenda("status").catch(()=>{ $("agenda").hidden=true; });
   toonMeld().catch(()=>{});
   toonWeek(tok).catch(()=>{ $("week").hidden=true; });
-  toonWa(tok).catch(()=>{});
 }
 // Inklapbare kaarten op pc en gsm (MyBTC, Clubkalender, Instellingen, app, Beheer, Bekijk als). Toestand per toestel.
 (function(){
@@ -428,34 +426,6 @@ document.querySelectorAll("#dagen .kies-d").forEach(b=>b.addEventListener("click
   toonDagenKeuze(); const t=lees("btc-club-token"); if(t) toonWeek(t).catch(()=>{});
 }));
 toonDagenKeuze();
-// WhatsApp-groepen per niveau: één knop. Mag het lid in één groep, dan gaat de knop meteen naar die groep;
-// bij meerdere groepen kiest het lid eerst. De uitnodigingslink staat niet in de pagina: ze komt pas bij een klik
-// uit de database, na dezelfde niveaucontrole (club_wa_link).
-let WAG=[];
-async function toonWa(tok){
-  const r=await rpc("club_wa_groepen",{p_token:tok});
-  if(!r||r.fout||!r.groepen) return;
-  WAG=r.groepen.filter(x=>x.toegang&&x.heeft_link);
-  $("lkWa").hidden=!WAG.length;
-  $("waKeuze").innerHTML=WAG.map(x=>`<a class="lk" href="#" data-wa="${x.id}" style="padding:10px 16px"><b>Groep ${esc(x.naam)}</b></a>`).join("");
-}
-async function naarWa(id,sp){
-  const oud=sp.textContent; sp.textContent="Even geduld…";
-  try{
-    const r=await rpc("club_wa_link",{p_token:lees("btc-club-token"),p_groep:id});
-    if(r.ok&&r.link){ location.href=r.link; return; }
-    sp.textContent=r.fout?r.fout.charAt(0).toUpperCase()+r.fout.slice(1)+".":oud;
-  }catch(err){ sp.textContent="De server antwoordt niet."; }
-}
-$("lkWa").addEventListener("click",e=>{
-  e.preventDefault();
-  if(WAG.length===1){ naarWa(WAG[0].id,$("waUitleg")); return; }
-  const open=$("waKeuze").hidden; $("waKeuze").hidden=!open; $("lkWa").setAttribute("aria-expanded",String(open));
-  $("waUitleg").textContent=open?"Kies je groep":"Spelers zoeken via WhatsApp, op jouw niveau";
-});
-$("waKeuze").addEventListener("click",e=>{
-  const a=e.target.closest("[data-wa]"); if(!a) return; e.preventDefault(); naarWa(+a.dataset.wa,a.querySelector("b"));
-});
 async function toonWeek(tok){
   let r;
   try{ r=await rpc("club_mijn_week",{p_token:tok,p_dagen:dagenVooruit()}); }

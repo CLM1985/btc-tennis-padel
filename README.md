@@ -9,6 +9,7 @@
 | `interclub/` | Interclub: kalender en uitslagen, ploeg inschrijven, mijn ploegen, overzicht voor commissie en bestuur | `…/interclub/` |
 | `opstellingsplanner/` | Opstellingsplanner interclub (kapiteins, commissie, bestuur) | `…/opstellingsplanner/` |
 | `spelerszoeker/` | Spelerszoeker: medespelers zoeken en meedoen met oproepen | `…/spelerszoeker/` |
+| `whatsapp/` | WhatsApp-groepen per niveau, met toegangscontrole | `…/whatsapp/` |
 | `interclubbijdrage/` | Simulator interclubbijdrage per ploeg (padelcommissie en bestuur) | `…/interclubbijdrage/` |
 
 Geen enkele pagina bevat namen of gegevens: alles komt live uit Supabase `padel-interclub`
@@ -138,7 +139,7 @@ Privacy: `ladder_mijn` registreert enkel de actieve dag per speler (opvolging la
 - Volledige naam en klassement zichtbaar voor aangemelde leden. Meldingen via `club.meldingen`; melding bij nieuwe oproepen is opt-in.
 - Functies: `club_zoeker`, `club_zoeker_plaats`, `club_zoeker_doe_mee`, `club_zoeker_afmelden`, `club_zoeker_annuleer`,
   `club_zoeker_terrein`, `club_zoeker_meldingen`. Script: `sql/01_Governance_Clublogin_spelerszoeker.sql`.
-- **WhatsApp-groepen per niveau**: op de startpagina (Samen spelen, onder Spelerszoeker) de knop **WhatsApp-groepen**: bij één toegelaten groep meteen naar die groep, bij meerdere eerst kiezen. Toegang
-  (eigen niveau + de groep net daaronder; hogere speelsterkte telt mee; hoogste groep open voor alle hogere niveaus).
-  De uitnodigingslink komt pas bij een klik uit de database (`club_wa_link`, gelogd). Links instellen: Beheer → WhatsApp-groepen
-  (`club_wa_beheer`). Script: `sql/01_Governance_Clublogin_whatsapp.sql`.
+- **WhatsApp-groepen per niveau** (`whatsapp/`): knop op de startpagina (Samen spelen, onder Spelerszoeker). De pagina toont alle groepen;
+  groepen waar het lid niet in mag staan in grijswaarden en tonen bij een tik waarom. Toegang: eigen niveau + de groep net daaronder;
+  hogere speelsterkte telt mee; hoogste groep open voor alle hogere niveaus. De uitnodigingslink komt pas bij een klik uit de database
+  (`club_wa_link`, gelogd). Links instellen: Beheer → WhatsApp-groepen (`club_wa_beheer`). Script: `sql/01_Governance_Clublogin_whatsapp.sql`.

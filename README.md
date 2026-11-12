@@ -8,6 +8,7 @@
 | `klassementsimulator/` | Klassementsimulator (iedereen met een code; bereik volgens rol) | `…/klassementsimulator/` |
 | `interclub/` | Interclub: kalender en uitslagen, ploeg inschrijven, mijn ploegen, overzicht voor commissie en bestuur | `…/interclub/` |
 | `opstellingsplanner/` | Opstellingsplanner interclub (kapiteins, commissie, bestuur) | `…/opstellingsplanner/` |
+| `spelerszoeker/` | Spelerszoeker: medespelers zoeken en meedoen met oproepen | `…/spelerszoeker/` |
 | `interclubbijdrage/` | Simulator interclubbijdrage per ploeg (padelcommissie en bestuur) | `…/interclubbijdrage/` |
 
 Geen enkele pagina bevat namen of gegevens: alles komt live uit Supabase `padel-interclub`
@@ -129,3 +130,11 @@ Privacy: `ladder_mijn` registreert enkel de actieve dag per speler (opvolging la
   (ploegen met 2/3 thuismatchen, poule- en eindrondethuismatchen) en de groepstarieven uit Lessen; toegang commissie en bestuur.
 - Script: `sql/03_Competitie_Interclubbijdrage_simulator.sql`. Instellingen worden per toestel bewaard (`btc-ic-bijdrage`).
 - Volle breedte zonder MyBTC/Clubkalender: `window.BTC_GEEN_ZIJBALK=1` vóór `toegang.js` (werkt voor elke pagina).
+
+## Spelerszoeker (`spelerszoeker/`)
+- Leden plaatsen een oproep (moment, terreinstatus, aantal heren/dames/vrij samen 1–3, optioneel niveaubereik, opmerking).
+- Niveau belangrijk: leden met een klassement buiten het bereik zien de oproep niet en krijgen geen melding. Enkel klassement, geen speelsterkte.
+- Wie eerst komt, speelt mee; max. 3 lopende oproepen per lid; "gereserveerd" kan pas binnen 7 dagen (venster Elit).
+- Volledige naam en klassement zichtbaar voor aangemelde leden. Meldingen via `club.meldingen`; melding bij nieuwe oproepen is opt-in.
+- Functies: `club_zoeker`, `club_zoeker_plaats`, `club_zoeker_doe_mee`, `club_zoeker_afmelden`, `club_zoeker_annuleer`,
+  `club_zoeker_terrein`, `club_zoeker_meldingen`. Script: `sql/01_Governance_Clublogin_spelerszoeker.sql`.

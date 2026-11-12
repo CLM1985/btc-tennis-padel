@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<script src="../thema.js"></script>
+<script src="../toegang.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#152B46">
+<link rel="icon" type="image/png" sizes="48x48" href="../app/favicon-48.png">
+<link rel="apple-touch-icon" href="../app/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="BTC Padel">
+<script>if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("../sw.js",{scope:"../"}).catch(function(){})});</script>
+<meta name="robots" content="noindex">
+<title>BTC Spelerszoeker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@600;700;800&family=Montserrat:wght@400;500;600;700&display=swap">
+<style>
+/* Spelerszoeker: oproepen plaatsen en meedoen. Alle gegevens en regels zitten in de database
+   (club_zoeker*); deze pagina toont enkel wat de database voor dit lid teruggeeft. */
+:root{
+  --bg:#F3F1E9; --surface:#FAF9F4; --ink:#152B46; --muted:#5A6676; --line:#DCE4D2;
+  --accent:#435B28; --on-accent:#F3F1E9; --accent-soft:#DCE4D2; --padel:#DFE7EE; --lime:#C5E75A;
+  --rand:#9AA89A;
+  --f-display:"League Spartan","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1A2A; --surface:#15263B; --ink:#F3F1E9; --muted:#A3B1C1; --line:#2A3D55;
+  --accent:#C5E75A; --on-accent:#152B46; --accent-soft:#26341F; --padel:#1E3149; --rand:#4A5D75; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1A2A; --surface:#15263B; --ink:#F3F1E9; --muted:#A3B1C1; --line:#2A3D55;
+  --accent:#C5E75A; --on-accent:#152B46; --accent-soft:#26341F; --padel:#1E3149; --rand:#4A5D75; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--f-display);margin:0;letter-spacing:0}
+h1{font-size:2rem;font-weight:800}
+.lbl{font-size:.72rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+.muted{color:var(--muted)}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.knop{min-height:46px;padding:0 18px;border-radius:10px;border:1.5px solid var(--rand);background:transparent;font-weight:700}
+.knop.hoofd{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.knop.breed{width:100%}
+.knop.link{border:0;text-decoration:underline;font-weight:600;padding:0 6px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tabs button{flex:1;min-height:44px;border-radius:999px;border:1.5px solid var(--rand);background:transparent;font-weight:600;font-size:.9rem;padding:0 12px}
+.tabs button[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg);font-weight:700}
+.melding{margin:0;min-height:0;font-weight:600}
+.melding:empty{display:none}
+.melding.fout{color:#A5432A}
+.melding.ok{color:var(--accent)}
+.kaart{background:var(--padel);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.kaart.mijn{background:var(--accent-soft)}
+.moment{font-family:var(--f-display);font-weight:800;font-size:1.3rem;line-height:1.15}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.78rem;font-weight:600;padding:3px 10px;border-radius:999px;border:1.5px solid var(--accent);color:var(--accent)}
+.chip.niv{border-color:var(--ink);color:var(--ink)}
+.chip.vrij{border-color:var(--rand);color:var(--muted)}
+.chip.vol{background:var(--accent);color:var(--on-accent)}
+.chip.vol::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--lime);margin-right:6px;vertical-align:middle}
+.chip.weg{border-color:#A5432A;color:#A5432A}
+.terrein{font-size:.88rem;font-weight:700}
+.terrein.ok{color:var(--accent)}
+.spelers{list-style:none;margin:0;padding:0;font-size:.92rem}
+.spelers li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-top:1px solid var(--line)}
+.spelers li:first-child{border-top:0}
+.spelers b{font-family:var(--f-display);font-weight:800}
+.opm{font-size:.9rem;font-style:italic;color:var(--muted);margin:0}
+.acties{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.leeg{background:var(--surface);border:1px dashed var(--rand);border-radius:12px;padding:16px;color:var(--muted);margin:0}
+form{display:flex;flex-direction:column;gap:20px}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{padding:0;margin-bottom:8px}
+.veld{display:flex;flex-direction:column;gap:4px;font-size:.85rem;font-weight:600}
+.veld input,.veld select,.veld textarea{min-height:46px;border:1.5px solid var(--rand);border-radius:10px;background:var(--surface);padding:0 12px;font-size:1rem}
+.veld textarea{padding:10px 12px;resize:vertical;min-height:70px;font-size:.95rem}
+.rij2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rij3{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:10px}
+.keuze{display:flex;align-items:center;gap:10px;min-height:44px}
+.keuze input{width:20px;height:20px;accent-color:var(--accent)}
+.info{background:var(--padel);border-radius:12px;padding:10px 14px;font-size:.88rem;margin:0}
+.teller{display:flex;align-items:center;justify-content:space-between;min-height:52px;border-bottom:1px solid var(--line)}
+.teller:last-of-type{border-bottom:0}
+.teller span{font-weight:600}
+.teller div{display:flex;align-items:center;gap:14px}
+.teller output{font-family:var(--f-display);font-weight:800;font-size:1.4rem;min-width:16px;text-align:center}
+.rond{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--rand);background:transparent;font-size:1.3rem;line-height:1}
+.rond.plus{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.schakel{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;font-weight:600}
+.schakel input{width:22px;height:22px;accent-color:var(--accent);flex:none}
+.voet{border-top:1px solid var(--line);padding-top:14px}
+@media (max-width:420px){.rij3{grid-template-columns:1fr 1fr}.rij3 .veld:first-child{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top"><h1>Spelerszoeker</h1></header>
+  <p class="muted" style="margin:0">Zoek medespelers of doe mee met een oproep. Wie eerst komt, speelt mee.</p>
+
+  <div>
+    <button type="button" class="knop hoofd breed" id="btnNieuw">+ Nieuwe oproep</button>
+    <p class="muted" style="margin:6px 0 0;font-size:.82rem;text-align:center" id="teller"></p>
+  </div>
+
+  <nav class="tabs" role="tablist" aria-label="Weergave">
+    <button type="button" role="tab" data-tab="voor" aria-selected="true" id="tabVoor">Voor mij</button>
+    <button type="button" role="tab" data-tab="mijn" aria-selected="false" id="tabMijn">Mijn speelmomenten</button>
+  </nav>
+  <p class="melding" id="melding" role="status" aria-live="polite"></p>
+
+  <section id="v-voor" style="display:flex;flex-direction:column;gap:12px">
+    <p class="muted" style="margin:0;font-size:.85rem" id="ikKlas"></p>
+    <div id="lijstVoor" style="display:flex;flex-direction:column;gap:12px"></div>
+  </section>
+
+  <section id="v-mijn" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div id="lijstMijn" style="display:flex;flex-direction:column;gap:12px"></div>
+  </section>
+
+  <section id="v-nieuw" hidden>
+    <form id="frm" novalidate>
+      <h2 style="font-size:1.5rem">Nieuwe oproep</h2>
+      <fieldset>
+        <legend class="lbl">1 · Speelmoment</legend>
+        <div class="rij3">
+          <label class="veld">Datum<input type="date" id="fDatum" required></label>
+          <label class="veld">Van<select id="fVan"></select></label>
+          <label class="veld">Tot<select id="fTot"></select></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="lbl">2 · Terrein</legend>
+        <p class="info" id="fPlanning" hidden></p>
+        <label class="keuze"><input type="radio" name="terrein" value="gereserveerd" id="fGeres"><span id="fGeresTekst">Terrein gereserveerd in Elit</span></label>
+        <label class="keuze"><input type="radio" name="terrein" value="niet_gereserveerd" id="fNietGeres" checked>Nog niet gereserveerd</label>
+      </fieldset>
+
+      <fieldset>
+        <legend class="lbl">3 · Wie zoek je? (max. 3)</legend>
+        <div class="teller" data-k="m"><span>Heren</span><div><button type="button" class="rond" data-d="-1" aria-label="Minder heren">−</button><output>0</output><button type="button" class="rond plus" data-d="1" aria-label="Meer heren">+</button></div></div>
+        <div class="teller" data-k="v"><span>Dames</span><div><button type="button" class="rond" data-d="-1" aria-label="Minder dames">−</button><output>0</output><button type="button" class="rond plus" data-d="1" aria-label="Meer dames">+</button></div></div>
+        <div class="teller" data-k="x"><span>Maakt niet uit</span><div><button type="button" class="rond" data-d="-1" aria-label="Minder spelers">−</button><output>0</output><button type="button" class="rond plus" data-d="1" aria-label="Meer spelers">+</button></div></div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="lbl">4 · Niveau</legend>
+        <label class="schakel">Niveau is belangrijk<input type="checkbox" id="fNivAan"></label>
+        <div class="rij2" id="fNivBereik" hidden>
+          <label class="veld">Van<select id="fNivMin"></select></label>
+          <label class="veld">Tot<select id="fNivMax"></select></label>
+        </div>
+        <p class="muted" style="margin:0;font-size:.82rem" id="fNivUitleg"></p>
+      </fieldset>
+
+      <label class="veld">Opmerking (optioneel)<textarea id="fOpm" maxlength="200" placeholder="bv. terrein 3, ballen voorzien"></textarea></label>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button type="submit" class="knop hoofd breed" id="fPlaats">Oproep plaatsen</button>
+        <button type="button" class="knop breed" id="fAnnuleer">Annuleren</button>
+      </div>
+    </form>
+  </section>
+
+  <div class="voet">
+    <label class="schakel"><span>Meld mij nieuwe oproepen die bij mij passen<br><span class="muted" style="font-weight:400;font-size:.82rem">Zet ook de meldingen aan op de startpagina (Instellingen).</span></span><input type="checkbox" id="optMeld"></label>
+  </div>
+</div>
+
+<script>
+(() => {
+const API = "https://povgjkvmzfrhhaxfanwn.supabase.co/rest/v1/rpc/", KEY = "sb_publishable_LfcbY6X1DgOBFW1rH3Umnw__RdObpur";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const TOKEN = BTC.token;
+const DAG = ["zo", "ma", "di", "wo", "do", "vr", "za"], MND = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+let D = null, TAB = "voor", AANTAL = { m: 0, v: 0, x: 0 };
+
+async function rpc(fn, args) {
+  const r = await fetch(API + fn, { method: "POST", cache: "no-store", headers: { apikey: KEY, Authorization: "Bearer " + KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_token: TOKEN, ...(args || {}) }) });
+  if (!r.ok) throw new Error("de server antwoordt niet (" + r.status + ")");
+  const j = await r.json();
+  if (j && j.fout === "niet aangemeld") { BTC.naarLogin(); throw new Error("niet aangemeld"); }
+  return j;
+}
+function melding(t, soort) { const m = $("melding"); m.textContent = t || ""; m.className = "melding " + (soort || ""); }
+const d = (s) => new Date(String(s).replace(" ", "T"));          // tijden zijn lokale tijd (Brussel), zonder zone
+const uu = (x) => String(x.getHours()).padStart(2, "0") + "u" + String(x.getMinutes()).padStart(2, "0");
+const dagTekst = (x) => `${DAG[x.getDay()]} ${x.getDate()} ${MND[x.getMonth()]}`;
+const pad = (n) => String(n).padStart(2, "0");
+const lokaal = (x) => `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())}T${pad(x.getHours())}:${pad(x.getMinutes())}:00`;
+
+/* ---------------------------------------------------------------- weergave */
+function gezochtTekst(g) {
+  const p = [];
+  if (g.m) p.push(g.m + (g.m === 1 ? " heer" : " heren"));
+  if (g.v) p.push(g.v + (g.v === 1 ? " dame" : " dames"));
+  if (g.x) p.push(g.x + (g.x === 1 ? " speler" : " spelers"));
+  return p.join(" + ");
+}
+function kaart(o, soort) {
+  const van = d(o.van), tot = d(o.tot);
+  const vrij = o.vrij.m + o.vrij.v + o.vrij.x;
+  const st = o.status === "volzet" ? '<span class="chip vol">Volledig</span>'
+    : o.status === "geannuleerd" ? '<span class="chip weg">Geannuleerd</span>'
+    : o.status === "voorbij" ? '<span class="chip vrij">Voorbij</span>'
+    : `<span class="chip">Nog ${esc(gezochtTekst(o.vrij))} gezocht</span>`;
+  const niv = o.niveau ? `<span class="chip niv">P${o.niveau.min} – P${o.niveau.max}</span>` : '<span class="chip vrij">Elk niveau</span>';
+  const spelers = [{ naam: o.maker.naam, klassement: o.maker.klassement, org: true }].concat(o.deelnemers);
+  const lijst = '<ul class="spelers">' + spelers.map((s) =>
+    `<li><span>${esc(s.naam)}${s.org ? ' <span class="muted" style="font-size:.8rem">· organisator</span>' : ""}</span><b>${esc(s.klassement)}</b></li>`).join("") + "</ul>";
+  const knoppen = [];
+  const actief = o.status === "open" || o.status === "volzet";
+  if (soort === "voor") knoppen.push(`<button type="button" class="knop hoofd" data-actie="mee" data-id="${o.id}">Ik doe mee</button>`);
+  if (o.doe_mee && actief) knoppen.push(`<button type="button" class="knop link" data-actie="af" data-id="${o.id}">Ik kan toch niet – afmelden</button>`);
+  if (o.ben_maker && actief && o.terrein !== "gereserveerd" && o.reserveerbaar) knoppen.push(`<button type="button" class="knop hoofd" data-actie="terrein" data-id="${o.id}">Terrein is gereserveerd</button>`);
+  if (o.ben_maker && actief) knoppen.push(`<button type="button" class="knop" data-actie="annuleer" data-id="${o.id}">Annuleren</button>`);
+  if ((o.doe_mee || o.ben_maker) && actief) knoppen.push(`<button type="button" class="knop" data-actie="agenda" data-id="${o.id}">In mijn agenda</button>`);
+  return `<article class="kaart${soort === "mijn" ? " mijn" : ""}">
+    <div class="moment">${esc(dagTekst(van))} · ${uu(van)}–${uu(tot)}</div>
+    <div class="chips">${st}${niv}</div>
+    <div class="terrein${o.terrein === "gereserveerd" ? " ok" : ""}">${esc(o.terreintekst)}</div>
+    ${lijst}
+    ${o.opmerking ? `<p class="opm">“${esc(o.opmerking)}”</p>` : ""}
+    ${knoppen.length ? `<div class="acties">${knoppen.join("")}</div>` : ""}
+  </article>`;
+}
+function toon() {
+  const ik = D.ik;
+  $("teller").textContent = `Je hebt ${ik.lopend} van ${ik.max_lopend} lopende oproepen`;
+  $("btnNieuw").disabled = ik.lopend >= ik.max_lopend;
+  $("ikKlas").textContent = `Jouw klassement: P${ik.klassement}. Je ziet enkel oproepen waar nog een plaats voor jou is.`;
+  $("optMeld").checked = !!ik.meldingen;
+  $("lijstVoor").innerHTML = D.open.length ? D.open.map((o) => kaart(o, "voor")).join("")
+    : '<p class="leeg">Er staan nu geen oproepen open voor jou. Plaats zelf een oproep, of zet de meldingen hieronder aan.</p>';
+  const mijn = new Map();
+  D.mijn.concat(D.mee).forEach((o) => mijn.set(o.id, o));
+  const ms = [...mijn.values()].sort((a, b) => d(a.van) - d(b.van));
+  $("lijstMijn").innerHTML = ms.length ? ms.map((o) => kaart(o, "mijn")).join("") : '<p class="leeg">Je hebt nog geen speelmomenten via de spelerszoeker.</p>';
+  $("tabVoor").textContent = `Voor mij (${D.open.length})`;
+  $("tabMijn").textContent = `Mijn speelmomenten (${ms.filter((o) => o.status === "open" || o.status === "volzet").length})`;
+}
+function kiesTab(t) {
+  TAB = t;
+  document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
+  $("v-voor").hidden = t !== "voor"; $("v-mijn").hidden = t !== "mijn";
+}
+async function laad() {
+  try {
+    D = await rpc("club_zoeker");
+    if (D.fout) { melding(D.fout, "fout"); return; }
+    toon();
+  } catch (e) { if (e.message !== "niet aangemeld") melding("Laden mislukt: " + e.message, "fout"); }
+}
+
+/* ---------------------------------------------------------------- acties op kaarten */
+const VRAAG = { annuleer: "Oproep annuleren? Alle spelers krijgen een melding.", af: "Afmelden voor dit speelmoment?" };
+const OK = { mee: "Je doet mee.", af: "Je bent afgemeld.", annuleer: "De oproep is geannuleerd.", terrein: "Genoteerd: terrein gereserveerd." };
+const FN = { mee: "club_zoeker_doe_mee", af: "club_zoeker_afmelden", annuleer: "club_zoeker_annuleer", terrein: "club_zoeker_terrein" };
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("button[data-actie]"); if (!b) return;
+  const id = Number(b.dataset.id), a = b.dataset.actie;
+  if (a === "agenda") { agenda(id); return; }
+  if (VRAAG[a] && !confirm(VRAAG[a])) return;
+  b.disabled = true;
+  try {
+    const r = await rpc(FN[a], { p_oproep: id });
+    if (r.fout) { melding(r.fout.charAt(0).toUpperCase() + r.fout.slice(1) + ".", "fout"); }
+    else {
+      let t = OK[a];
+      if (a === "mee" && r.oproep && r.oproep.status === "volzet") t = "Je doet mee. Jullie groep is volledig.";
+      melding(t, "ok");
+      if (a === "mee") kiesTab("mijn");
+    }
+  } catch (err) { if (err.message !== "niet aangemeld") melding("Mislukt: " + err.message, "fout"); }
+  await laad();
+});
+
+/* Agenda: .ics-bestand in lokale tijd, zonder namen van anderen */
+function agenda(id) {
+  const o = D.mijn.concat(D.mee).find((x) => x.id === id); if (!o) return;
+  const ics = (x) => x.replace(/[-:]/g, "").slice(0, 15);
+  const tekst = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//BTC Wemmel//Spelerszoeker//NL", "BEGIN:VEVENT",
+    "UID:btc-zoeker-" + o.id + "@btc-wemmel", "DTSTAMP:" + new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z",
+    "DTSTART:" + ics(o.van), "DTEND:" + ics(o.tot), "SUMMARY:Padel BTC Wemmel", "LOCATION:BTC Wemmel",
+    "DESCRIPTION:" + o.terreintekst, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([tekst], { type: "text/calendar" }));
+  a.download = "padel-btc-" + o.van.slice(0, 10) + ".ics";
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ---------------------------------------------------------------- nieuwe oproep */
+function uren(sel, waarde) {
+  const opts = [];
+  for (let m = 7 * 60; m <= 23 * 60; m += 30) { const t = pad(Math.floor(m / 60)) + ":" + pad(m % 60); opts.push(`<option value="${t}"${t === waarde ? " selected" : ""}>${t.replace(":", "u")}</option>`); }
+  sel.innerHTML = opts.join("");
+}
+function vanTot() {
+  const dag = $("fDatum").value; if (!dag) return [null, null];
+  return [new Date(dag + "T" + $("fVan").value), new Date(dag + "T" + $("fTot").value)];
+}
+function controleerTerrein() {
+  const [van] = vanTot(); const geres = $("fGeres");
+  if (van && van - new Date() > 7 * 86400000) {
+    const vanaf = new Date(van - 7 * 86400000);
+    $("fPlanning").innerHTML = `<b>Planning.</b> Dit moment ligt meer dan 7 dagen vooruit. Reserveren in Elit kan vanaf <b>${dagTekst(vanaf)} om ${uu(vanaf)}</b>.`;
+    $("fPlanning").hidden = false; geres.disabled = true; $("fNietGeres").checked = true;
+    $("fGeresTekst").textContent = "Terrein gereserveerd (nog niet mogelijk)";
+  } else {
+    $("fPlanning").hidden = true; geres.disabled = false; $("fGeresTekst").textContent = "Terrein gereserveerd in Elit";
+  }
+}
+function tellers() {
+  const tot = AANTAL.m + AANTAL.v + AANTAL.x;
+  document.querySelectorAll(".teller").forEach((t) => {
+    const k = t.dataset.k; t.querySelector("output").textContent = AANTAL[k];
+    t.querySelector('[data-d="-1"]').disabled = AANTAL[k] === 0;
+    t.querySelector('[data-d="1"]').disabled = tot >= 3;
+  });
+  $("fPlaats").disabled = tot === 0;
+}
+function niveau() {
+  const aan = $("fNivAan").checked;
+  $("fNivBereik").hidden = !aan;
+  $("fNivUitleg").textContent = aan
+    ? `Jouw klassement is P${D.ik.klassement}. Leden met een klassement buiten dit bereik zien de oproep niet en krijgen geen melding.`
+    : "Alle leden kunnen de oproep zien, ongeacht hun klassement.";
+}
+function openNieuw() {
+  const morgen = new Date(Date.now() + 86400000);
+  $("fDatum").value = `${morgen.getFullYear()}-${pad(morgen.getMonth() + 1)}-${pad(morgen.getDate())}`;
+  $("fDatum").min = new Date().toISOString().slice(0, 10);
+  const max = new Date(Date.now() + 60 * 86400000); $("fDatum").max = max.toISOString().slice(0, 10);
+  uren($("fVan"), "19:00"); uren($("fTot"), "20:30");
+  AANTAL = { m: 0, v: 0, x: 3 }; tellers();
+  const L = D.ik.ladder, opt = (v) => L.map((n) => `<option value="${n}"${n === v ? " selected" : ""}>P${n}</option>`).join("");
+  $("fNivMin").innerHTML = opt(D.ik.standaard_min); $("fNivMax").innerHTML = opt(D.ik.standaard_max);
+  $("fNivAan").checked = false; niveau();
+  $("fOpm").value = ""; $("fNietGeres").checked = true; controleerTerrein();
+  $("v-nieuw").hidden = false; $("v-voor").hidden = true; $("v-mijn").hidden = true;
+  document.querySelector(".tabs").hidden = true; $("btnNieuw").parentElement.hidden = true; melding("");
+  $("fDatum").focus();
+}
+function sluitNieuw() {
+  $("v-nieuw").hidden = true; document.querySelector(".tabs").hidden = false; $("btnNieuw").parentElement.hidden = false; kiesTab(TAB);
+}
+$("btnNieuw").addEventListener("click", openNieuw);
+$("fAnnuleer").addEventListener("click", sluitNieuw);
+["fDatum", "fVan"].forEach((id) => $(id).addEventListener("change", () => {
+  if (id === "fVan") { const [v] = vanTot(); if (v) { const t = new Date(v.getTime() + 90 * 60000); const w = pad(t.getHours()) + ":" + pad(t.getMinutes()); if ([...$("fTot").options].some((o) => o.value === w)) $("fTot").value = w; } }
+  controleerTerrein();
+}));
+document.querySelectorAll(".teller button").forEach((b) => b.addEventListener("click", () => {
+  const k = b.closest(".teller").dataset.k; AANTAL[k] = Math.max(0, AANTAL[k] + Number(b.dataset.d)); tellers();
+}));
+$("fNivAan").addEventListener("change", niveau);
+$("frm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const [van, tot] = vanTot();
+  if (!van) { melding("Kies een datum.", "fout"); return; }
+  if (tot <= van) { melding("Het einduur moet na het beginuur liggen.", "fout"); return; }
+  const nivAan = $("fNivAan").checked, nmin = Number($("fNivMin").value), nmax = Number($("fNivMax").value);
+  if (nivAan && nmin > nmax) { melding("Het niveaubereik klopt niet: 'van' is hoger dan 'tot'.", "fout"); return; }
+  $("fPlaats").disabled = true;
+  try {
+    const r = await rpc("club_zoeker_plaats", {
+      p_van: lokaal(van), p_tot: lokaal(tot), p_terrein: document.querySelector('input[name="terrein"]:checked').value,
+      p_m: AANTAL.m, p_v: AANTAL.v, p_x: AANTAL.x, p_niveau_min: nivAan ? nmin : null, p_niveau_max: nivAan ? nmax : null,
+      p_opmerking: $("fOpm").value.trim() || null });
+    if (r.fout) { melding(r.fout.charAt(0).toUpperCase() + r.fout.slice(1) + ".", "fout"); $("fPlaats").disabled = false; return; }
+    sluitNieuw(); kiesTab("mijn"); melding("Je oproep staat online.", "ok"); await laad();
+  } catch (err) { if (err.message !== "niet aangemeld") melding("Mislukt: " + err.message, "fout"); $("fPlaats").disabled = false; }
+});
+
+/* ---------------------------------------------------------------- meldingen en tabs */
+$("optMeld").addEventListener("change", async (e) => {
+  try {
+    const r = await rpc("club_zoeker_meldingen", { p_aan: e.target.checked });
+    if (r.fout) { melding(r.fout, "fout"); e.target.checked = !e.target.checked; }
+    else melding(r.meldingen ? "Je krijgt een melding bij nieuwe oproepen die bij jou passen." : "Meldingen voor nieuwe oproepen staan uit.", "ok");
+  } catch (err) { e.target.checked = !e.target.checked; }
+});
+document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => { kiesTab(b.dataset.tab); melding(""); }));
+if (location.hash === "#mijn") kiesTab("mijn");
+laad();
+})();
+</script>
+</body>
+</html>

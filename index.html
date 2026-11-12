@@ -215,6 +215,7 @@ a.wk.thuis{background:#DCE4D2;border-color:var(--accent)}
   <h2>Samen spelen</h2>
   <nav class="links" aria-label="Samen spelen">
     <a class="lk" href="spelerszoeker/"><b>Spelerszoeker</b><span>Zoek medespelers of doe mee met een oproep</span></a>
+    <a class="lk" href="whatsapp/"><b>WhatsApp-groepen</b><span>Spelers zoeken via WhatsApp, op jouw niveau</span></a>
   </nav>
   </div>
   <div class="groep groep-interclub">
@@ -324,7 +325,7 @@ async function rpc(fn,args){
 // Na aanmelden terug naar de pagina waar je vandaan kwam (enkel pagina's van deze site)
 function terug(){
   const t=new URLSearchParams(location.search).get("terug")||"";
-  return /^(ladder-inschrijving|tornooien|lessen|interclub|opstellingsplanner|klassementsimulator|beheer)\/([a-z-]+\.html)?(#[A-Za-z0-9-]*)?$/.test(t)?t:null;
+  return /^(ladder-inschrijving|tornooien|lessen|interclub|opstellingsplanner|klassementsimulator|beheer|spelerszoeker|whatsapp)\/([a-z-]+\.html)?(#[A-Za-z0-9-]*)?$/.test(t)?t:null;
 }
 function toonLogin(){ document.body.classList.remove("aangemeld"); $("vbBlok").hidden=true; $("blokBeheer").hidden=true; $("instDagen").hidden=true; $("agenda").hidden=true; $("meld").hidden=true; $("login").hidden=false; $("publiek").hidden=false; $("menu").hidden=true; $("wie").hidden=true; $("laden").hidden=true; }
 async function toonMenu(){

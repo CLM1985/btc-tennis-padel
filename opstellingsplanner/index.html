@@ -88,8 +88,7 @@ header.top .toast{color:var(--on-band)}
 .facts{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.88rem;width:100%;border-top:1px solid var(--line);padding-top:10px}
 .facts b{font-family:var(--f-mono);font-weight:500}
 
-.grid{display:grid;grid-template-columns:minmax(320px,410px) minmax(0,1fr);gap:18px;align-items:start}
-@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
 
 .spelerskop{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;border:0;background:none;padding:0;text-align:left;cursor:pointer}
@@ -100,9 +99,11 @@ header.top .toast{color:var(--on-band)}
 .spelerskop #bronlabel{display:none}
 .pijl{display:inline-block;transition:transform .15s}
 .spelerskop[aria-expanded=false] .pijl{transform:rotate(-90deg)}
-.plist{display:flex;flex-direction:column;max-height:560px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--sunk)}
+.plist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:12px;align-content:start;max-height:248px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--sunk)}
+.plist > div{grid-column:1/-1}
+@media (max-width:860px){.plist{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.plist{grid-template-columns:minmax(0,1fr);max-height:360px}}
 .prow{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line);font-size:.9rem}
-.prow:last-child{border-bottom:0}
 .prow span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .prow.off{opacity:.45}
 .g{font-size:.7rem;font-weight:700;border-radius:3px;padding:0 5px}
@@ -774,7 +775,7 @@ function renderSpelers(){
     :`<div style="padding:12px" class="muted">${huidigeLijst?"Geen spelers voor deze filter.":"Geen spelerslijst."}</div>`;
   const v=K.filter(id=>sp(id)?.g==="V").length;
   $("kernkort").textContent = K.length ? `${K.length} geselecteerd${C().mixed?` (${v} D, ${K.length-v} H)`:""}` : "nog niemand geselecteerd";
-  const open = spelersOpen ?? !K.length;          // ingeklapt zodra er een selectie is, tenzij de gebruiker zelf koos
+  const open = spelersOpen ?? K.length<4;        // ingeklapt zodra de ploeg minstens 4 spelers heeft, tenzij de gebruiker zelf koos
   $("spelersBody").hidden = !open; $("spelersKop").setAttribute("aria-expanded", open);
   $("kerninfo").textContent=(huidigeLijst?`${huidigeLijst.spelers.length} spelers op de lijst. `:"")+`Ploegselectie: ${K.length} spelers${C().mixed?` (${v} dames, ${K.length-v} heren)`:""}. Vink spelers aan om ze aan de ploeg toe te voegen.`;
 }

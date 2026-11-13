@@ -185,7 +185,7 @@ h1::after{content:"";display:block;width:28px;height:3px;background:var(--lime);
 .scout .sc-head{display:flex;flex-direction:column;gap:4px}
 .scout .sc-head h2{font-size:clamp(1.7rem,6vw,2.3rem);font-weight:800;line-height:1}
 .scout .sc-head .muted{font-size:.85rem;font-weight:600}
-.scout .sc-seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;padding:4px;background:var(--info-soft);border-radius:12px;max-width:520px}
+.scout .sc-seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;padding:4px;background:var(--info-soft);border-radius:12px}
 .scout .sc-seg button{min-height:44px;border:0;border-radius:9px;background:transparent;font-weight:600;font-size:.85rem;cursor:pointer;line-height:1.15}
 .scout .sc-seg button small{display:block;font-size:.7rem;opacity:.7;font-weight:600}
 .scout .sc-seg button[aria-pressed=true],.scout .sc-seg button[aria-selected=true]{background:var(--band);color:var(--on-band);font-weight:700}
@@ -234,8 +234,15 @@ h1::after{content:"";display:block;width:28px;height:3px;background:var(--lime);
 .scout .sc-balk{display:flex;height:7px;border-radius:999px;overflow:hidden;background:var(--bg)}
 .scout .sc-balk span{display:block;height:100%}
 .scout .sc-duos{display:flex;flex-direction:column;gap:10px;margin-top:6px}
-.scout .sc-picker{background:var(--info-soft);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;max-width:640px}
+.scout .sc-picker{background:var(--info-soft);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
 .scout .sc-picker select{width:100%;min-height:48px;border-radius:10px;border:1.5px solid var(--ink);background:var(--bg);font-weight:700;font-size:.95rem;padding:0 12px}
+.scout .sc-tgn{background:var(--info-soft);border-radius:14px;padding:6px 0}
+.scout .sc-tgn-r{display:grid;grid-template-columns:minmax(0,1fr) 22px 52px 52px;gap:8px;align-items:center;padding:6px 14px;font-size:.85rem;border-bottom:1px solid var(--line)}
+.scout .sc-tgn-r:last-child{border-bottom:0}
+.scout .sc-tgn-r span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.scout .sc-tgn-r .kl,.scout .sc-tgn-r .st{text-align:right}
+.scout .sc-tgn-r.kop{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.scout .sc-tgn-r.off{opacity:.45}
 .scout .sc-chips{display:flex;gap:8px;flex-wrap:wrap;font-size:.75rem;font-weight:700}
 .scout .sc-chips span{border-radius:999px;padding:3px 10px}
 .scout .sc-chips .bad{background:var(--bad-soft);color:var(--bad)}.scout .sc-chips .warn{background:var(--warn-soft);color:var(--warn)}.scout .sc-chips .ok{background:var(--ok-soft);color:var(--ok)}
@@ -1012,6 +1019,14 @@ function scoutKaarten(ms, sleutel){
   }
   return `<div class="sc-kop"><h3>Per match</h3><span class="muted">BTC links · tegenstander rechts</span></div><div class="sc-kaarten">${html}</div>`;
 }
+function scoutTegenstanders(o, r){
+  const lijst=(o.spelers||[]).slice().sort((a,b)=>stS(tgnMap.get(b.id))-stS(tgnMap.get(a.id))||(b.k||0)-(a.k||0));
+  if(!lijst.length) return "";
+  const rij=p=>{ const q=tgnMap.get(p.id)||p, uit=p.k && p.k>r.kmax;
+    return `<div class="sc-tgn-r${uit?" off":""}"${uit?' title="Klassement boven de grens van deze afdeling"':""}><span title="${esc(p.naam||"")}">${esc(p.naam||"?")}</span><span class="g ${p.g}">${p.g==="V"?"D":"H"}</span><span class="kl">${p.k?"P"+p.k:"–"}</span>${typeof p.st==="number"?stCel(p):`<span class="st geen" title="Geen speelsterkte gekend; geschat ${q.st}">~${q.st}</span>`}</div>`; };
+  return `<div class="sc-kop"><h3>Spelers</h3><span class="muted">${lijst.length} op hun lijst</span></div>
+    <div class="sc-tgn"><div class="sc-tgn-r kop"><span>Naam</span><span></span><span class="kl">Klass.</span><span class="st">Sterkte</span></div>${lijst.map(rij).join("")}</div>`;
+}
 function scoutDuos(o, ons, tgn, paren){
   const types=duoTypes();
   if(!types.some(t=>t[0]===ui.scoutType)) ui.scoutType=types[0][0];
@@ -1081,8 +1096,8 @@ function renderScout(){
     const sk=ids=>ids.slice().sort((a,b)=>a-b).join("+");
     paren=new Set(ms.map(m=>sk(m.a)+"|"+sk(m.b)));
     const sl=scoutSleutel(ms);
-    html+=`<div class="sc-cols"><div class="sc-links">${scoutHero(ms)}${sl.html}</div><div class="sc-rechts">${scoutKaarten(ms, sl.nrs)}</div></div>`;
-  } else html+=`<p class="muted">Geen opstelling te berekenen: ${esc(bo.fout||bt.fout||"")}</p>`;
+    html+=`<div class="sc-cols"><div class="sc-links">${scoutHero(ms)}${sl.html}${scoutTegenstanders(o, r)}</div><div class="sc-rechts">${scoutKaarten(ms, sl.nrs)}</div></div>`;
+  } else html+=`<p class="muted">Geen opstelling te berekenen: ${esc(bo.fout||bt.fout||"")}</p>${scoutTegenstanders(o, r)}`;
   html+=`<div class="sc-duos">${scoutDuos(o, ons, tgn, paren)}</div>`;
   const bijgewerkt=o.bijgewerkt?new Date(o.bijgewerkt).toLocaleDateString("nl-BE",{day:"numeric",month:"short"}):"";
   const metSchat=[...tgnMap.values(),...ons].some(geschat);

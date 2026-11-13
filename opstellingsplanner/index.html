@@ -247,8 +247,13 @@ h1::after{content:"";display:block;width:28px;height:3px;background:var(--lime);
 .scout .sc-chips span{border-radius:999px;padding:3px 10px}
 .scout .sc-chips .bad{background:var(--bad-soft);color:var(--bad)}.scout .sc-chips .warn{background:var(--warn-soft);color:var(--warn)}.scout .sc-chips .ok{background:var(--ok-soft);color:var(--ok)}
 .scout .sc-lijst{background:var(--info-soft);border-radius:12px;overflow:hidden}
-.scout .sc-rij{display:grid;grid-template-columns:minmax(0,1fr) minmax(48px,90px) 58px;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.scout .sc-rij{display:grid;grid-template-columns:20px minmax(0,1fr) minmax(48px,90px) 58px;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
 .scout .sc-rij:last-child{border-bottom:0}
+.scout .sc-rij input{width:18px;height:18px;margin:0;accent-color:var(--band);cursor:pointer}
+.scout .sc-rij.gek{box-shadow:inset 3px 0 0 var(--band)}
+.scout .sc-tgnbalk{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:.8rem;font-weight:600;color:var(--muted)}
+.scout .sc-tgnbalk b{color:var(--ink)}
+.scout .sc-tgnbalk button{border:0;background:none;color:var(--brand);font-weight:700;cursor:pointer;padding:0;text-decoration:underline}
 .scout .sc-rij b{font-size:.9rem}
 .scout .sc-heat{background:var(--info-soft);border-radius:14px;padding:0 14px}
 .scout .sc-heat summary{min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;font-weight:700;list-style:none}
@@ -569,7 +574,7 @@ function voorstel(d){
   return voorstelPool(pool, waarde);
 }
 // Sterkste geldige opstelling uit een willekeurige pool (eigen selectie of tegenstander)
-function voorstelPool(pool, waarde){
+function voorstelPool(pool, waarde, verplicht=[]){
   const c=C(), r=R();
   if(pool.length<4) return {fout:"Te weinig beschikbare spelers in de selectie (minstens 4, binnen het maximumklassement)."};
   const opties=[];
@@ -580,10 +585,13 @@ function voorstelPool(pool, waarde){
     if(hoog<r.pmin) return {fout:`Geen geldige opstelling: de 4 hoogst geklasseerde spelers in je selectie tellen samen maar ${hoog} punten, en het minimum in deze afdeling is ${r.pmin}. Voeg spelers met een hoger klassement toe aan de selectie.`};
     return {fout:`Geen geldige rotatie mogelijk: elke rotatie van 4 spelers moet samen tussen ${r.pmin} en ${r.pmax} punten tellen${C().mixed?", met de juiste verdeling dames/heren":""}. Pas de selectie aan.`};
   }
+  const moet=new Set(verplicht);
+  if(moet.size){ const heeft=o=>o.duo.some(dd=>moet.has(duoSleutel(dd))); opties.forEach(l=>l.sort((a,b)=>heeft(b)-heeft(a)||b.w-a.w)); }
   let best=null, bestScore=-Infinity, nodes=0; const LIM=800000;
   const telling={}, duos=new Set(), keuze=[];
   (function dfs(ri,som){
     if(nodes++>LIM) return;
+    if(moet.size){ let open=0; moet.forEach(k=>{ if(!duos.has(k)) open++; }); if(open>(c.rot-ri)*2) return; }
     if(ri===c.rot){
       const ids=Object.keys(telling).filter(k=>telling[k]>0);
       if(ids.length<4||ids.length>8) return;
@@ -596,16 +604,17 @@ function voorstelPool(pool, waarde){
     for(const o of opties[ri]){
       const ids=o.duo.flat();
       if(ids.some(id=>(telling[id]||0)>=c.mps)) continue;
-      const k1=[...o.duo[0]].sort().join("+"), k2=[...o.duo[1]].sort().join("+");
+      const k1=duoSleutel(o.duo[0]), k2=duoSleutel(o.duo[1]);
       if(duos.has(k1)||duos.has(k2)) continue;
       ids.forEach(id=>telling[id]=(telling[id]||0)+1); duos.add(k1); duos.add(k2); keuze.push(o.duo);
       dfs(ri+1,som+o.w);
       ids.forEach(id=>telling[id]--); duos.delete(k1); duos.delete(k2); keuze.pop();
     }
   })(0,0);
-  if(!best) return {fout:"Geen geldige opstelling gevonden (duo's, geslacht of puntengrenzen)."};
+  if(!best) return {fout:moet.size?"Met de aangeduide duo's is geen geldige opstelling mogelijk (puntengrenzen per rotatie, max. "+c.mps+" matchen per speler). Pas de vinkjes aan.":"Geen geldige opstelling gevonden (duo's, geslacht of puntengrenzen)."};
   return {opst:best, afgekapt:nodes>LIM};
 }
+const duoSleutel=ids=>ids.slice().sort((a,b)=>a-b).join("+");
 function rotOpties(pool,ri,r,waarde){
   const uit=[], n=pool.length;
   const paren=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]];
@@ -1027,6 +1036,10 @@ function scoutTegenstanders(o, r){
   return `<div class="sc-kop"><h3>Spelers</h3><span class="muted">${lijst.length} op hun lijst</span></div>
     <div class="sc-tgn"><div class="sc-tgn-r kop"><span>Naam</span><span></span><span class="kl">Klass.</span><span class="st">Sterkte</span></div>${lijst.map(rij).join("")}</div>`;
 }
+// Aangeduide opstelling van de tegenstander (vinkjes in de duolijst), per ontmoeting, bewaard op dit toestel
+function tgnKeuze(o){ if(!ui.scoutTgn) ui.scoutTgn={}; return (ui.scoutTgn[o.match_id]||[]).filter(k=>k.split("+").every(id=>tgnMap.has(+id))); }
+function maxPerType(code){ const c=C(); if(!c.mixed) return c.rot*2; return code==="GD"?(c.rot-1)*2:1; }
+function typeVanDuo(ids){ const g=ids.map(id=>tgnMap.get(id)?.g).sort().join(""); return C().mixed?(g==="MM"?"HD":g==="VV"?"DD":"GD"):duoTypes()[0][0]; }
 function scoutDuos(o, ons, tgn, paren){
   const types=duoTypes();
   if(!types.some(t=>t[0]===ui.scoutType)) ui.scoutType=types[0][0];
@@ -1043,8 +1056,9 @@ function scoutDuos(o, ons, tgn, paren){
     const x=gekozen||best.x, k=gekozen?duoKans(o,gekozen.ids,t.ids):best.k;
     return {t,x,k};
   });
+  const gekozenT=new Set(tgnKeuze(o)), vol=[...gekozenT].filter(k=>typeVanDuo(k.split("+").map(Number))===code).length>=maxPerType(code);
   const groep=(titel,kl,lijst)=>lijst.length?`<div class="sc-eb ${kl}">${titel}</div><div class="sc-lijst">${lijst.map(({t,x,k})=>`
-    <div class="sc-rij"><div><b>${voornamen(t.ids)}</b> ${histTag(duoHist(o,t.ids))}<small>P${t.k} · sterkte ${t.st}${!gekozen?` · jij: ${voornamen(x.ids)}`:` <span style="color:${kansKleur(k.p)}">${t.st>x.st?"+":"−"}${Math.abs(t.st-x.st)}</span>`}</small></div>
+    <div class="sc-rij${gekozenT.has(t.key)?" gek":""}"><input type="checkbox" data-tgn="${t.key}" aria-label="${esc(voornamen(t.ids))} speelt" ${gekozenT.has(t.key)?"checked":vol?"disabled title=\"Al genoeg duo's van dit type aangeduid\"":""}><div><b>${voornamen(t.ids)}</b> ${histTag(duoHist(o,t.ids))}<small>P${t.k} · sterkte ${t.st}${!gekozen?` · jij: ${voornamen(x.ids)}`:` <span style="color:${kansKleur(k.p)}">${t.st>x.st?"+":"−"}${Math.abs(t.st-x.st)}</span>`}</small></div>
       <div class="sc-balk"><span style="width:${Math.round(k.p*100)}%;background:${kansKleur(k.p)}"></span></div>
       <div class="sc-pct s" style="color:${kansKleur(k.p)}">${pctTxt(k.p)}${k.ps?'<small>padelstats</small>':""}</div></div>`).join("")}</div>`:"";
   const moeilijk=rijen.filter(r=>r.k.p<0.45), open=rijen.filter(r=>r.k.p>=0.45&&r.k.p<0.55), gunstig=rijen.filter(r=>r.k.p>=0.55);
@@ -1084,12 +1098,15 @@ function renderScout(){
   let html=`<div class="sc-head"><div class="sc-eb">Scouting · ${esc(String(o.ronde||""))}</div><h2>${esc(String(o.tegen||"?").replace(/\s*\([^)]*\)\s*$/,""))}</h2>
     <div class="muted">${esc(wanneer)} · ${o.tu==="thuis"?"thuis":"uit"} · ${ons.length} spelers beschikbaar${slot?" ("+esc(SLOT_LABEL[slot])+")":""}</div></div>`;
   if(ons.length<2){ v.innerHTML=html+`<p class="muted">Kies eerst je selectie in de spelerslijst (en duid afwezigen aan op de speeldag).</p>`; return; }
-  const bo=voorstelPool(ons, stS), bt=voorstelPool(tgn, stS);
+  const keuzeT=tgnKeuze(o);
+  const bo=voorstelPool(ons, stS), bt=voorstelPool(tgn, stS, keuzeT);
+  const nSlots=c.rot*2;
   const plan4=d.opst.slice(0,c.rot), planVol=plan4.flat(2).filter(x=>x!=null).length===c.rot*4;
   if(ui.scoutModus==="plan" && !planVol) ui.scoutModus="sterkst";
   const modus=ui.scoutModus||"sterkst";
   html+=`<div class="sc-seg" role="group" aria-label="Vergelijking"><button data-sm="sterkst" aria-pressed="${modus==="sterkst"}">Sterkste vs sterkste</button><button data-sm="plan" aria-pressed="${modus==="plan"}" ${planVol?"":`disabled title="Vul eerst je opstelling in op ${esc(SLOT_LABEL[slot]||"de speeldag")}"`}>Mijn opstelling</button></div>`;
   const onsOpst = modus==="plan" ? plan4 : bo.opst;
+  html+=`<div class="sc-tgnbalk">Opstelling tegenstander: ${keuzeT.length?`<b>${keuzeT.length===nSlots?"volledig aangeduid":`${keuzeT.length} van ${nSlots} duo's aangeduid`}</b>${keuzeT.length<nSlots?" · rest: hun sterkste geldige":""} <button type="button" data-tgnwis>Wis keuze</button>`:`<b>verwacht</b> (hun sterkste geldige) · vink hieronder bij Alle duo's aan wie effectief speelt`}</div>`;
   let paren=new Set();
   if(onsOpst && bt.opst){
     const ms=scoutMatchen(o, onsOpst, bt.opst);
@@ -1246,9 +1263,15 @@ $("fases").addEventListener("click",e=>{const b=e.target.closest("[data-fase]");
 $("plist").addEventListener("change",e=>{const v=e.target.dataset.kern; if(v==null) return; if(spelersOpen===null) spelersOpen=true;   // niet dichtklappen terwijl je kiest
   const id=+v, K=plan.kern, i=K.indexOf(id);
   if(e.target.checked&&i<0) K.push(id); if(!e.target.checked&&i>=0) K.splice(i,1); wijziging();});
-$("scoutView").addEventListener("change",e=>{ const s=e.target.closest("#scoutOns"); if(!s) return;
+$("scoutView").addEventListener("change",e=>{
+  const cb=e.target.closest("[data-tgn]");
+  if(cb){ const o=scoutOnt(); if(!o) return; if(!ui.scoutTgn) ui.scoutTgn={};
+    const l=new Set(tgnKeuze(o)); cb.checked?l.add(cb.dataset.tgn):l.delete(cb.dataset.tgn);
+    ui.scoutTgn[o.match_id]=[...l]; bewaarUi(); renderScout(); return; }
+  const s=e.target.closest("#scoutOns"); if(!s) return;
   const o=scoutOnt(); if(!o) return; if(!ui.scoutOns) ui.scoutOns={}; ui.scoutOns[o.match_id+":"+s.dataset.code]=s.value; bewaarUi(); renderScout(); });
 $("scoutView").addEventListener("click",e=>{
+  if(e.target.closest("[data-tgnwis]")){ const o=scoutOnt(); if(o&&ui.scoutTgn){ delete ui.scoutTgn[o.match_id]; bewaarUi(); renderScout(); } return; }
   const m=e.target.closest("[data-sm]"); if(m && !m.disabled){ ui.scoutModus=m.dataset.sm; bewaarUi(); renderScout(); return; }
   const t=e.target.closest("[data-st]"); if(t){ ui.scoutType=t.dataset.st; bewaarUi(); renderScout(); } });
 $("scoutView").addEventListener("toggle",e=>{ const d=e.target; if(!d.matches||!d.matches("details[data-hk]")) return;

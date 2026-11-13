@@ -99,9 +99,8 @@ header.top .toast{color:var(--on-band)}
 .spelerskop #bronlabel{display:none}
 .pijl{display:inline-block;transition:transform .15s}
 .spelerskop[aria-expanded=false] .pijl{transform:rotate(-90deg)}
-.plist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:12px;align-content:start;max-height:248px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--sunk)}
+.plist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px;align-content:start;max-height:248px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--sunk)}
 .plist > div{grid-column:1/-1}
-@media (max-width:860px){.plist{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:560px){.plist{grid-template-columns:minmax(0,1fr);max-height:360px}}
 .prow{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line);font-size:.9rem}
 .prow span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

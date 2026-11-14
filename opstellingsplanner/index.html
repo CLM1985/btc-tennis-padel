@@ -236,6 +236,7 @@ h1::after{content:"";display:block;width:28px;height:3px;background:var(--lime);
 .scout .sc-duos{display:flex;flex-direction:column;gap:10px;margin-top:6px}
 .scout .sc-picker{background:var(--info-soft);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
 .scout .sc-picker select{width:100%;min-height:48px;border-radius:10px;border:1.5px solid var(--ink);background:var(--bg);font-weight:700;font-size:.95rem;padding:0 12px}
+.linkbtn{border:0;background:none;padding:0;color:inherit;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
 .scout .sc-tgn{background:var(--info-soft);border-radius:14px;padding:6px 0}
 .scout .sc-tgn-r{display:grid;grid-template-columns:minmax(0,1fr) 22px 52px 52px;gap:8px;align-items:center;padding:6px 14px;font-size:.85rem;border-bottom:1px solid var(--line)}
 .scout .sc-tgn-r:last-child{border-bottom:0}
@@ -478,7 +479,7 @@ function zetPanelen(){
 }
 document.querySelectorAll("[data-paneel]").forEach(k=>k.addEventListener("click",()=>{
   const naam=k.dataset.paneel, open=k.getAttribute("aria-expanded")!=="true"; ui.panelen[naam]=open; bewaarUi(); zetPanelen(); }));   // null = automatisch (open zonder selectie, dicht met selectie); anders de keuze van de gebruiker
-let lijsten={}, ploegen={}, meta=null;           // uit de gedeelde opslag
+let lijsten={}, ploegen={}, meta=null, laadFout=null;   // laadFout: gegevens konden niet geladen worden           // uit de gedeelde opslag
 let plan=null, planUnsub=null, planPad=null, planGeladen=false;
 let spelersMap=new Map(), huidigeLijst=null;
 
@@ -775,7 +776,8 @@ function renderConfig(){
     ["Formaat",`${c.rot*2} matchen, ${c.rot} rotaties`],["Per speler",`${c.mps} matchen`],["Spelers","4–8"],
     ...(c.mixed?[["Gemengd","R1 dames + heren, R2 gemengd"]]:[])].map(([k,v])=>`<span><span class="muted">${k}</span> <b>${esc(v)}</b></span>`).join("");
   const n=$("notice");
-  if(!huidigeLijst){ n.hidden=false; n.textContent=`Nog geen spelerslijst ${c.cat} voor het ${c.seizoen.toLowerCase()} in de opslag. Ze verschijnt na de eerstvolgende dagelijkse update zodra de club ze in ELIT heeft ingediend.`; }
+  if(laadFout){ n.hidden=false; n.innerHTML=`${esc(laadFout)} <button type="button" class="linkbtn" id="herlaad">Opnieuw proberen</button>`; }
+  else if(!huidigeLijst){ n.hidden=false; n.textContent=`Nog geen spelerslijst ${c.cat} voor het ${c.seizoen.toLowerCase()} in de opslag. Ze verschijnt na de eerstvolgende dagelijkse update zodra de club ze in ELIT heeft ingediend.`; }
   else n.hidden=true;
 }
 
@@ -1329,7 +1331,9 @@ function naarEigenPloeg(){
     [ui.comp,ui.afdIdx]=oud; } }
 }
 async function laadGegevens(){
-  const r=await rpc("club_planner_data",{p_token:token});
+  let r;
+  try{ r=await rpc("club_planner_data",{p_token:token}); laadFout=null; }
+  catch(e){ laadFout="De ploegen en spelerslijsten konden niet geladen worden"+(e.message?` (${e.message.replace(/\.$/,"")})`:"")+"."; render(); return; }
   if(r.fout){ if(r.fout==="niet aangemeld"){ afmelden(); return; }
     const n=$("notice"); n.hidden=false; n.textContent="Geen toegang tot de planner: "+r.fout+"."; return; }
   lijsten={}; (r.lijsten||[]).forEach(l=>{ lijsten["l"+l.periode_id+"-"+slug(l.categorie)]=l; });
@@ -1372,6 +1376,7 @@ async function start(){
   try{ if(await wieBenIk()) await laadGegevens(); else toonLogin(); }
   catch(e){ const n=$("notice"); n.hidden=false; n.textContent=e.message||"De server antwoordt niet."; }
 }
+document.addEventListener("click",e=>{ if(e.target.id==="herlaad"){ laadFout=null; laadGegevens(); } });
 start();
 })();
 </script>

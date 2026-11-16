@@ -11,6 +11,7 @@
 | `spelerszoeker/` | Spelerszoeker: medespelers zoeken en meedoen met oproepen | `…/spelerszoeker/` |
 | `whatsapp/` | WhatsApp-groepen per niveau, met toegangscontrole | `…/whatsapp/` |
 | `interclubbijdrage/` | Simulator interclubbijdrage per ploeg (padelcommissie en bestuur) | `…/interclubbijdrage/` |
+| `communicatie/` | Posts voor Canva: interclubdata als CSV voor Bulk Create (rol communicatie, commissie, bestuur) | `…/communicatie/` |
 
 Geen enkele pagina bevat namen of gegevens: alles komt live uit Supabase `padel-interclub`
 via publieke functies die zelf sessie en rol controleren. De publieke sleutel in de pagina's
@@ -143,3 +144,12 @@ Privacy: `ladder_mijn` registreert enkel de actieve dag per speler (opvolging la
   groepen waar het lid niet in mag staan in grijswaarden en tonen bij een tik waarom. Toegang: eigen niveau + de groep net daaronder;
   hogere speelsterkte telt mee; hoogste groep open voor alle hogere niveaus. De uitnodigingslink komt pas bij een klik uit de database
   (`club_wa_link`, gelogd). Links instellen: Beheer → WhatsApp-groepen (`club_wa_beheer`). Script: `sql/01_Governance_Clublogin_whatsapp.sql`.
+
+## Posts voor Canva (`communicatie/`)
+- Voor de communicatieverantwoordelijke (rol `communicatie`, toe te kennen in `beheer/`), commissie en bestuur.
+- Periode kiezen (komend weekend, deze/volgende week, vorig weekend of vrij), vooruitblik of uitslagen, één post per dag of week,
+  max. aantal wedstrijden per post (= kaarten in het Canva-sjabloon). Download één CSV per aantal wedstrijden voor Canva Bulk Create.
+- Kolommen per post: titel, periode, deel, aantal; per wedstrijd n: ploeg, thuis_uit, tegenstander, regel, ronde, uur, dag, kapitein, uitslag, resultaat.
+- Kapiteinsnamen van BTC mogen in de communicatie (beslissing 9/11/2026). Geen namen van tegenstanders.
+- Nette clubnamen van tegenstanders: standaardregel + vertaaltabel `club.comm_clubnamen`, aan te passen op de pagina (gelogd).
+- Functies: `club_comm_post`, `club_comm_clubnaam`. Script: `sql/05_Evenementen_Communicatie_canva.sql`.

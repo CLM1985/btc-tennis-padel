@@ -223,6 +223,7 @@ a.wk.thuis{background:#DCE4D2;border-color:var(--accent)}
   <nav class="links" aria-label="Interclub en klassement">
     <a class="lk" href="interclub/" id="lkInterclub" hidden><b>Interclub</b><span>Kalender, uitslagen en de voorjaarsinterclub</span></a>
     <a class="lk" href="opstellingsplanner/" id="lkPlanner" hidden><b>Opstellingsplanner</b><span>Voor kapiteins van een ploeg</span></a>
+    <a class="lk" href="communicatie/" id="lkCommunicatie" hidden><b>Posts voor Canva</b><span>Interclubdata voor sociale media</span></a>
     <a class="lk" href="klassementsimulator/"><b>Klassementsimulator</b><span>Wat doen je uitslagen met je klassement?</span></a>
   </nav>
   </div>
@@ -293,6 +294,7 @@ a.wk.thuis{background:#DCE4D2;border-color:var(--accent)}
         <button type="button" class="kies-d" data-rol="hoofdcoach" role="radio">Hoofdcoach</button>
         <button type="button" class="kies-d" data-rol="commissie" role="radio">Commissie</button>
         <button type="button" class="kies-d" data-rol="bestuur" role="radio">Bestuur</button>
+        <button type="button" class="kies-d" data-rol="communicatie" role="radio">Communicatie</button>
       </div>
       <p class="err" id="vbFout" role="alert"></p>
     </div>
@@ -337,6 +339,7 @@ async function toonMenu(){
   toonVoorbeeld(m);
   $("lkPlanner").hidden=!(m.onderdelen&&m.onderdelen.ploegen);
   $("lkInterclub").hidden=!(m.onderdelen&&m.onderdelen.interclub);
+  $("lkCommunicatie").hidden=!(m.onderdelen&&m.onderdelen.communicatie);
   $("grCommissie").hidden=!(m.onderdelen&&m.onderdelen.commissie);
   $("blokBeheer").hidden=!(m.onderdelen&&m.onderdelen.beheer);
   if(m.onderdelen&&m.onderdelen.trainer) $("lkLessenUitleg").textContent="Inschrijven, of als trainer lesmomenten openen";

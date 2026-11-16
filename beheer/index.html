@@ -279,7 +279,7 @@ const URL_ = "https://povgjkvmzfrhhaxfanwn.supabase.co/rest/v1/rpc/";
 const KEY = "sb_publishable_LfcbY6X1DgOBFW1rH3Umnw__RdObpur";
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const ROLLEN = [["commissie","Commissie"],["bestuur","Bestuur"],["wedstrijdleider","Wedstrijdleider"],["trainer","Trainer"],["hoofdcoach","Hoofdcoach"],["beheerder","Beheerder"]];
+const ROLLEN = [["commissie","Commissie"],["bestuur","Bestuur"],["wedstrijdleider","Wedstrijdleider"],["trainer","Trainer"],["hoofdcoach","Hoofdcoach"],["communicatie","Communicatie"],["beheerder","Beheerder"]];
 let token = null, gekozen = null, mij = null, leden = [], bevestig = null;
 try { token = localStorage.getItem("btc-club-token"); } catch (e) {}
 

@@ -907,7 +907,7 @@ footer{font-size:13px;color:var(--muted);text-align:center}
                    : el("span",{class:"volgt",text:voorbij(w) ? "Uitslag volgt" : "Gepland"});
       return el("div",{class:"wed" + (w.mijn ? " mijn" : "") + (w.thuis_uit==="thuis" ? " thuis" : "")},
         el("span",{class:"uur",style:"font-size:14px",text:links}),
-        el("div",{class:"ploegen"}, el("b",{}, thuisLogo(w, "logo"), titelVan(w)), el("span",{text:[w.thuis_uit==="thuis" ? null : "Uit", w.ronde].filter(Boolean).join(" · ")})),
+        el("div",{class:"ploegen"}, el("b",{}, thuisLogo(w, "logo"), titelVan(w)), el("span",{text:[w.thuis_uit==="thuis" ? null : "Uit", w.ronde, w.kapitein ? "kapitein " + w.kapitein : null].filter(Boolean).join(" · ")})),
         el("div",{class:"rechts"}, rechts),
         w.gespeeld ? detailWedstrijden(w) : null);
     };

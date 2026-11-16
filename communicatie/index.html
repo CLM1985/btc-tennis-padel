@@ -131,7 +131,7 @@ code{font-size:.85em;background:var(--padel);padding:1px 5px;border-radius:5px}
       <li>Koppel elk tekstvak aan de juiste kolom (selecteer het vak en kies de kolom in het Bulk Create-paneel), en genereer de ontwerpen: één pagina per post.</li>
       <li>Thuis- en uit-icoontjes: gebruik de kolom <code>thuis_uit_1</code> (THUIS/UIT) als tekst; afbeeldingen via een link werken niet in Bulk Create.</li>
     </ol>
-    <p class="muted" style="margin:10px 0 0;font-size:.85rem">Kolommen per wedstrijd <i>n</i>: ploeg, thuis_uit, tegenstander, regel (THUIS · tegenstander), ronde, uur, dag, kapitein, uitslag (3–1), resultaat (WINST/VERLIES/GELIJK). Per post: titel, periode, aantal. Kapiteinsnamen staan zoals bij Tennis en Padel Vlaanderen ingeschreven (familienaam voornaam).</p>
+    <p class="muted" style="margin:10px 0 0;font-size:.85rem">Kolommen per wedstrijd <i>n</i>: ploeg, thuis_uit, tegenstander, regel (THUIS · tegenstander), ronde, uur, dag, kapitein, kapitein_regel (Kapitein: …), uitslag (3–1), resultaat (WINST/VERLIES/GELIJK). Per post: titel, periode, aantal. Kapiteinsnamen staan zoals bij Tennis en Padel Vlaanderen ingeschreven (familienaam voornaam).</p>
   </section>
 </div>
 
@@ -267,11 +267,11 @@ function toon() {
 }
 
 /* ---------- CSV ---------- */
-const VELDEN = ["ploeg", "thuis_uit", "tegenstander", "regel", "ronde", "uur", "dag", "kapitein", "uitslag", "resultaat"];
+const VELDEN = ["ploeg", "thuis_uit", "tegenstander", "regel", "ronde", "uur", "dag", "kapitein", "kapitein_regel", "uitslag", "resultaat"];
 const waarden = (w) => {
   const d = alsDatum(w.datum), tu = w.thuis_uit === "thuis" ? "THUIS" : "UIT";
   return { ploeg: w.ploeg, thuis_uit: tu, tegenstander: w.tegenstander, regel: tu + " · " + w.tegenstander, ronde: w.ronde || "",
-    uur: w.uur || "", dag: dagKort(d), kapitein: w.kapitein || "", uitslag: uitslag(w), resultaat: resultaat(w) };
+    uur: w.uur || "", dag: dagKort(d), kapitein: w.kapitein || "", kapitein_regel: w.kapitein ? "Kapitein: " + w.kapitein : "", uitslag: uitslag(w), resultaat: resultaat(w) };
 };
 // Formules uitschakelen (=, +, -, @ vooraan) zodat het bestand ook in Excel veilig opent.
 const cel = (v) => { let s = String(v ?? ""); if (/^[=+\-@]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };

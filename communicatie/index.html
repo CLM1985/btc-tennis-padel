@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<script src="../thema.js"></script>
+<script src="../toegang.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#152B46">
+<link rel="icon" type="image/png" sizes="48x48" href="../app/favicon-48.png">
+<link rel="apple-touch-icon" href="../app/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="BTC Padel">
+<script>if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("../sw.js",{scope:"../"}).catch(function(){})});</script>
+<meta name="robots" content="noindex">
+<title>BTC Posts voor Canva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@600;700;800&family=Montserrat:wght@400;500;600;700&display=swap">
+<style>
+/* Posts voor Canva: interclubdata als CSV voor Canva Bulk Create. Data uit club_comm_post (rol communicatie,
+   commissie of bestuur); nette clubnamen via club_comm_clubnaam. Namen van BTC-kapiteins mogen in de
+   communicatie (beslissing 9/11/2026); namen van tegenstanders worden nooit doorgegeven. */
+:root{
+  --bg:#F3F1E9; --surface:#FAF9F4; --ink:#152B46; --muted:#5A6676; --line:#DCE4D2;
+  --accent:#435B28; --on-accent:#F3F1E9; --padel:#DFE7EE; --lime:#C5E75A; --err:#A5432A;
+  --f-display:"League Spartan","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1A2A; --surface:#15263B; --ink:#F3F1E9; --muted:#A3B1C1; --line:#2A3D55;
+  --accent:#C5E75A; --on-accent:#152B46; --padel:#1E3149; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1A2A; --surface:#15263B; --ink:#F3F1E9; --muted:#A3B1C1; --line:#2A3D55;
+  --accent:#C5E75A; --on-accent:#152B46; --padel:#1E3149; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--f-display);font-weight:800;font-size:2rem;margin:0}
+h2{font-family:var(--f-display);font-weight:800;font-size:1.15rem;margin:0 0 8px;text-transform:uppercase;letter-spacing:.03em}
+.muted{color:var(--muted)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kaart{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.rij{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.rij + .rij{margin-top:10px}
+.rij > .lbl{min-width:120px;font-weight:600;font-size:.9rem}
+.kies{font:inherit;font-size:.88rem;font-weight:600;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
+.kies[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+input[type=date],select,input[type=text]{font:inherit;font-size:.9rem;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+button.knop{font:inherit;font-weight:700;border:0;border-radius:10px;padding:9px 16px;background:var(--accent);color:var(--on-accent);cursor:pointer}
+button.ghost{font:inherit;font-size:.85rem;font-weight:600;border:1px solid var(--line);border-radius:8px;padding:5px 10px;background:transparent;color:var(--ink);cursor:pointer}
+.melding{margin:0;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--ink);border-radius:10px;padding:12px 14px;font-size:.92rem}
+.melding:empty{display:none}
+.melding.fout{border-left-color:var(--err)}
+.post{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg)}
+.post + .post{margin-top:10px}
+.post-kop{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:700;margin-bottom:6px}
+.post-kop span{font-weight:500;color:var(--muted);font-size:.85rem}
+.wed{display:grid;grid-template-columns:110px 1fr auto;gap:8px;padding:6px 0;border-top:1px dashed var(--line);font-size:.9rem}
+.wed:first-of-type{border-top:0}
+.wed b{font-family:var(--f-display);font-size:1.05rem}
+.wed .sub{color:var(--muted);font-size:.82rem}
+.groep-dl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 4px}
+table.namen{width:100%;border-collapse:collapse;font-size:.88rem}
+table.namen td{padding:6px 4px;border-top:1px solid var(--line);vertical-align:middle}
+table.namen td:first-child{color:var(--muted);width:42%}
+table.namen input{width:100%}
+.stap{margin:0;padding-left:20px;font-size:.9rem}
+.stap li + li{margin-top:4px}
+code{font-size:.85em;background:var(--padel);padding:1px 5px;border-radius:5px}
+@media (max-width:560px){.wed{grid-template-columns:1fr auto}.wed .wanneer{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>Posts voor Canva</h1></header>
+  <p class="muted" style="margin:0">Kies een periode, controleer de wedstrijden en download het bestand. In Canva maak je er met <b>Bulk Create</b> in één keer de posts van.</p>
+  <p class="melding" id="melding" role="status" aria-live="polite"></p>
+
+  <section class="kaart" aria-labelledby="kKeuze">
+    <h2 id="kKeuze">Keuze</h2>
+    <div class="rij"><span class="lbl">Periode</span>
+      <button type="button" class="kies" data-per="weekend">Komend weekend</button>
+      <button type="button" class="kies" data-per="week">Deze week</button>
+      <button type="button" class="kies" data-per="volgende">Volgende week</button>
+      <button type="button" class="kies" data-per="vorig">Vorig weekend</button>
+    </div>
+    <div class="rij"><span class="lbl">Van – tot</span>
+      <input type="date" id="van" aria-label="Van"> <span>–</span> <input type="date" id="tot" aria-label="Tot">
+    </div>
+    <div class="rij"><span class="lbl">Soort post</span>
+      <button type="button" class="kies" data-soort="vooruit" aria-pressed="true">Vooruitblik</button>
+      <button type="button" class="kies" data-soort="uitslag">Uitslagen</button>
+      <button type="button" class="kies" data-soort="alles">Alles</button>
+    </div>
+    <div class="rij"><span class="lbl">Eén post per</span>
+      <button type="button" class="kies" data-groep="dag" aria-pressed="true">Dag</button>
+      <button type="button" class="kies" data-groep="week">Week</button>
+    </div>
+    <div class="rij"><span class="lbl">Thuis / uit</span>
+      <button type="button" class="kies" data-tu="alle" aria-pressed="true">Alle</button>
+      <button type="button" class="kies" data-tu="thuis">Enkel thuis</button>
+    </div>
+    <div class="rij"><label class="lbl" for="max">Max. per post</label>
+      <select id="max"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option></select>
+      <span class="muted" style="font-size:.85rem">Zoveel wedstrijdkaarten heeft je Canva-sjabloon. Meer wedstrijden → extra post.</span>
+    </div>
+  </section>
+
+  <section class="kaart" aria-labelledby="kPosts">
+    <h2 id="kPosts">Posts</h2>
+    <div id="posts"><p class="muted">Laden…</p></div>
+    <div id="downloads"></div>
+  </section>
+
+  <section class="kaart" aria-labelledby="kNamen">
+    <h2 id="kNamen">Clubnamen van tegenstanders</h2>
+    <p class="muted" style="margin:0 0 8px;font-size:.88rem">Tennis en Padel Vlaanderen levert de namen vaak in hoofdletters of heel lang. Pas hier de schrijfwijze aan; ze geldt daarna voor elke post. Leeg maken = standaard. De ploegletter (A, B…) komt er automatisch achter.</p>
+    <table class="namen"><tbody id="namen"></tbody></table>
+  </section>
+
+  <section class="kaart" aria-labelledby="kCanva">
+    <h2 id="kCanva">Zo werkt het in Canva</h2>
+    <ol class="stap">
+      <li>Maak één sjabloon per aantal wedstrijden (bv. 1, 2 en 3 kaarten), met een tekstvak voor elk gegeven: titel, ploeg_1, regel_1, uur_1, kapitein_1, ploeg_2…</li>
+      <li>Download hierboven het bestand voor dat aantal wedstrijden.</li>
+      <li>In Canva (op de computer): open het sjabloon → <b>Apps</b> → <b>Bulk create</b> → <b>Gegevens uploaden</b> → kies het bestand.</li>
+      <li>Koppel elk tekstvak aan de juiste kolom (selecteer het vak en kies de kolom in het Bulk Create-paneel), en genereer de ontwerpen: één pagina per post.</li>
+      <li>Thuis- en uit-icoontjes: gebruik de kolom <code>thuis_uit_1</code> (THUIS/UIT) als tekst; afbeeldingen via een link werken niet in Bulk Create.</li>
+    </ol>
+    <p class="muted" style="margin:10px 0 0;font-size:.85rem">Kolommen per wedstrijd <i>n</i>: ploeg, thuis_uit, tegenstander, regel (THUIS · tegenstander), ronde, uur, dag, kapitein, uitslag (3–1), resultaat (WINST/VERLIES/GELIJK). Per post: titel, periode, aantal. Kapiteinsnamen staan zoals bij Tennis en Padel Vlaanderen ingeschreven (familienaam voornaam).</p>
+  </section>
+</div>
+
+<script>
+(() => {
+const API = "https://povgjkvmzfrhhaxfanwn.supabase.co/rest/v1/rpc/", KEY = "sb_publishable_LfcbY6X1DgOBFW1rH3Umnw__RdObpur";
+const $ = (id) => document.getElementById(id);
+const el = (tag, attrs, ...kids) => {
+  const n = document.createElement(tag);
+  for (const k in (attrs || {})) { const v = attrs[k]; if (v == null || v === false) continue;
+    if (k === "text") n.textContent = v; else n.setAttribute(k, v === true ? "" : v); }
+  kids.forEach((c) => { if (c == null) return; n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+  return n;
+};
+async function rpc(fn, args) {
+  const r = await fetch(API + fn, { method: "POST", cache: "no-store", headers: { apikey: KEY, Authorization: "Bearer " + KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_token: BTC.token, ...(args || {}) }) });
+  if (!r.ok) throw new Error("de server antwoordt niet (" + r.status + ")");
+  const j = await r.json();
+  if (j && j.fout === "niet aangemeld") { BTC.naarLogin(); throw new Error("niet aangemeld"); }
+  return j;
+}
+function melding(t, fout) { const m = $("melding"); m.textContent = t || ""; m.className = "melding" + (fout ? " fout" : ""); }
+
+/* ---------- datums ---------- */
+const iso = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const plus = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const maandag = (d) => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); return plus(x, -((x.getDay() + 6) % 7)); };
+const alsDatum = (s) => new Date(String(s).slice(0, 10) + "T12:00");
+const dagKort = (d) => d.toLocaleDateString("nl-BE", { weekday: "short" }).replace(".", "").toUpperCase() + " " + d.getDate() + "/" + (d.getMonth() + 1);
+const maandKort = (d) => d.toLocaleDateString("nl-BE", { month: "short" }).replace(".", "");
+function periodeVan(soort) {
+  const nu = new Date(), ma = maandag(nu);
+  if (soort === "week") return [ma, plus(ma, 6)];
+  if (soort === "volgende") return [plus(ma, 7), plus(ma, 13)];
+  if (soort === "vorig") return [plus(ma, -2), plus(ma, -1)];
+  // komend weekend: zaterdag en zondag van deze week (op zondag: vandaag)
+  const za = plus(ma, 5); return nu.getDay() === 0 ? [plus(ma, 6), plus(ma, 6)] : [za, plus(ma, 6)];
+}
+
+/* ---------- toestand ---------- */
+let data = [], keuze = { soort: "vooruit", groep: "dag", tu: "alle" };
+function drukKnop(attr, waarde) {
+  document.querySelectorAll("[data-" + attr + "]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset[attr] === waarde)));
+}
+function zetPeriode(soort) {
+  const [a, b] = periodeVan(soort); $("van").value = iso(a); $("tot").value = iso(b); drukKnop("per", soort);
+  if (soort === "vorig") { keuze.soort = "uitslag"; drukKnop("soort", "uitslag"); }
+  else if (keuze.soort === "uitslag") { keuze.soort = "vooruit"; drukKnop("soort", "vooruit"); }
+}
+
+async function laad() {
+  const van = $("van").value, tot = $("tot").value;
+  if (!van || !tot) return;
+  $("posts").replaceChildren(el("p", { class: "muted", text: "Laden…" })); $("downloads").replaceChildren();
+  try {
+    const r = await rpc("club_comm_post", { p_van: van, p_tot: tot });
+    if (r.fout) { melding(r.fout.charAt(0).toUpperCase() + r.fout.slice(1) + ".", true); $("posts").replaceChildren(); return; }
+    melding(""); data = r.wedstrijden || []; toon();
+  } catch (e) { if (e.message !== "niet aangemeld") melding("Laden lukte niet: " + e.message, true); }
+}
+
+/* ---------- posts samenstellen ---------- */
+const uitslag = (w) => w.gespeeld && w.matchen_voor != null ? w.matchen_voor + "–" + w.matchen_tegen : "";
+const resultaat = (w) => ({ w: "WINST", v: "VERLIES", g: "GELIJK" })[w.uitkomst] || "";
+function gefilterd() {
+  return data.filter((w) =>
+    (keuze.soort === "alles" || (keuze.soort === "vooruit" ? !w.gespeeld : w.gespeeld)) &&
+    (keuze.tu === "alle" || w.thuis_uit === "thuis"));
+}
+function posts() {
+  const max = Number($("max").value), groepen = new Map();
+  gefilterd().forEach((w) => {
+    const d = alsDatum(w.datum), k = keuze.groep === "dag" ? String(w.datum).slice(0, 10) : iso(maandag(d));
+    if (!groepen.has(k)) groepen.set(k, []); groepen.get(k).push(w);
+  });
+  const uit = [];
+  [...groepen.keys()].sort().forEach((k) => {
+    const lijst = groepen.get(k), delen = Math.ceil(lijst.length / max);
+    let titel, periode;
+    if (keuze.groep === "dag") { titel = dagKort(alsDatum(k)); periode = k; }
+    else {
+      const a = alsDatum(k), b = plus(a, 6);
+      titel = a.getMonth() === b.getMonth() ? a.getDate() + "–" + b.getDate() + " " + maandKort(b).toUpperCase()
+                                            : a.getDate() + " " + maandKort(a).toUpperCase() + " – " + b.getDate() + " " + maandKort(b).toUpperCase();
+      periode = k + " – " + iso(b);
+    }
+    for (let i = 0; i < delen; i++)
+      uit.push({ titel, periode, deel: delen > 1 ? (i + 1) + "/" + delen : "", wedstrijden: lijst.slice(i * max, (i + 1) * max) });
+  });
+  return uit;
+}
+
+function toon() {
+  const lijst = posts(), box = $("posts"), dl = $("downloads");
+  box.replaceChildren(); dl.replaceChildren();
+  if (!lijst.length) {
+    box.appendChild(el("p", { class: "muted", text: data.length ? "Geen wedstrijden voor deze keuze." : "Geen padelinterclubwedstrijden in deze periode." }));
+  }
+  lijst.forEach((p) => {
+    const kaart = el("div", { class: "post" },
+      el("div", { class: "post-kop" }, el("div", { text: p.titel + (p.deel ? " (" + p.deel + ")" : "") }),
+        el("span", { text: p.wedstrijden.length + (p.wedstrijden.length === 1 ? " wedstrijd" : " wedstrijden") })));
+    p.wedstrijden.forEach((w) => {
+      const d = alsDatum(w.datum);
+      kaart.appendChild(el("div", { class: "wed" },
+        el("span", { class: "wanneer sub", text: dagKort(d) + (w.uur ? " · " + w.uur : "") }),
+        el("div", {}, el("b", { text: w.ploeg }), " ",
+          el("span", { text: (w.thuis_uit === "thuis" ? "THUIS · " : "UIT · ") + w.tegenstander }),
+          el("div", { class: "sub", text: [w.ronde, w.kapitein ? "Kapitein: " + w.kapitein : null].filter(Boolean).join(" · ") })),
+        el("b", { text: uitslag(w) })));
+    });
+    box.appendChild(kaart);
+  });
+  // Eén download per aantal wedstrijden: één Canva-sjabloon per aantal kaarten.
+  const perAantal = new Map();
+  lijst.forEach((p) => { const n = p.wedstrijden.length; if (!perAantal.has(n)) perAantal.set(n, []); perAantal.get(n).push(p); });
+  if (lijst.length) {
+    const rij = el("div", { class: "groep-dl" }, el("b", { text: "Download voor Bulk Create:" }));
+    [...perAantal.keys()].sort((a, b) => a - b).forEach((n) => {
+      const ps = perAantal.get(n), b = el("button", { type: "button", class: "knop",
+        text: ps.length + (ps.length === 1 ? " post" : " posts") + " met " + n + (n === 1 ? " wedstrijd" : " wedstrijden") });
+      b.addEventListener("click", () => download(ps, n));
+      rij.appendChild(b);
+    });
+    const alle = el("button", { type: "button", class: "ghost", text: "Alle wedstrijden (één rij per wedstrijd)" });
+    alle.addEventListener("click", downloadLang);
+    rij.appendChild(alle);
+    dl.appendChild(rij);
+    if (perAantal.size > 1) dl.appendChild(el("p", { class: "muted", style: "margin:0;font-size:.85rem",
+      text: "De posts hebben een verschillend aantal wedstrijden. Gebruik per bestand het sjabloon met dat aantal kaarten." }));
+  }
+  toonNamen();
+}
+
+/* ---------- CSV ---------- */
+const VELDEN = ["ploeg", "thuis_uit", "tegenstander", "regel", "ronde", "uur", "dag", "kapitein", "uitslag", "resultaat"];
+const waarden = (w) => {
+  const d = alsDatum(w.datum), tu = w.thuis_uit === "thuis" ? "THUIS" : "UIT";
+  return { ploeg: w.ploeg, thuis_uit: tu, tegenstander: w.tegenstander, regel: tu + " · " + w.tegenstander, ronde: w.ronde || "",
+    uur: w.uur || "", dag: dagKort(d), kapitein: w.kapitein || "", uitslag: uitslag(w), resultaat: resultaat(w) };
+};
+// Formules uitschakelen (=, +, -, @ vooraan) zodat het bestand ook in Excel veilig opent.
+const cel = (v) => { let s = String(v ?? ""); if (/^[=+\-@]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
+function bewaar(rijen, naam) {
+  const tekst = "﻿" + rijen.map((r) => r.map(cel).join(",")).join("\r\n");
+  const url = URL.createObjectURL(new Blob([tekst], { type: "text/csv;charset=utf-8" }));
+  const a = el("a", { href: url, download: naam }); document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+const bestandsnaam = (extra) => "btc-interclub-" + keuze.soort + "-" + $("van").value + "_" + $("tot").value + extra + ".csv";
+function download(ps, n) {
+  const kop = ["titel", "periode", "deel", "aantal"];
+  for (let i = 1; i <= n; i++) VELDEN.forEach((v) => kop.push(v + "_" + i));
+  const rijen = [kop];
+  ps.forEach((p) => {
+    const r = [p.titel, p.periode, p.deel, p.wedstrijden.length];
+    p.wedstrijden.forEach((w) => { const x = waarden(w); VELDEN.forEach((v) => r.push(x[v])); });
+    rijen.push(r);
+  });
+  bewaar(rijen, bestandsnaam("-" + n + "-per-post"));
+}
+function downloadLang() {
+  const rijen = [["datum", ...VELDEN]];
+  gefilterd().forEach((w) => { const x = waarden(w); rijen.push([String(w.datum).slice(0, 10), ...VELDEN.map((v) => x[v])]); });
+  bewaar(rijen, bestandsnaam("-per-wedstrijd"));
+}
+
+/* ---------- clubnamen ---------- */
+function toonNamen() {
+  const tb = $("namen"); tb.replaceChildren();
+  const uniek = new Map();
+  gefilterd().forEach((w) => { if (!uniek.has(w.tegenstander_bron)) uniek.set(w.tegenstander_bron, w.tegenstander.replace(/\s+[A-Z]$/, "")); });
+  if (!uniek.size) { tb.appendChild(el("tr", {}, el("td", { colspan: "3", class: "muted", text: "Geen tegenstanders in deze keuze." }))); return; }
+  [...uniek.entries()].sort().forEach(([bron, naam]) => {
+    const inp = el("input", { type: "text", maxlength: "60", value: naam, "aria-label": "Schrijfwijze voor " + bron });
+    const knop = el("button", { type: "button", class: "ghost", text: "Bewaar" });
+    knop.addEventListener("click", async () => {
+      knop.disabled = true;
+      try {
+        const r = await rpc("club_comm_clubnaam", { p_bron: bron, p_naam: inp.value });
+        if (r.fout) { melding(r.fout.charAt(0).toUpperCase() + r.fout.slice(1) + ".", true); return; }
+        melding("Bewaard: " + r.naam + "."); await laad();
+      } catch (e) { if (e.message !== "niet aangemeld") melding("Bewaren lukte niet: " + e.message, true); }
+      finally { knop.disabled = false; }
+    });
+    tb.appendChild(el("tr", {}, el("td", { text: bron }), el("td", {}, inp), el("td", {}, knop)));
+  });
+}
+
+/* ---------- bediening ---------- */
+document.querySelectorAll("[data-per]").forEach((b) => b.addEventListener("click", () => { zetPeriode(b.dataset.per); laad(); }));
+document.querySelectorAll("[data-soort]").forEach((b) => b.addEventListener("click", () => { keuze.soort = b.dataset.soort; drukKnop("soort", keuze.soort); toon(); }));
+document.querySelectorAll("[data-groep]").forEach((b) => b.addEventListener("click", () => { keuze.groep = b.dataset.groep; drukKnop("groep", keuze.groep); toon(); }));
+document.querySelectorAll("[data-tu]").forEach((b) => b.addEventListener("click", () => { keuze.tu = b.dataset.tu; drukKnop("tu", keuze.tu); toon(); }));
+["van", "tot"].forEach((id) => $(id).addEventListener("change", () => { drukKnop("per", ""); laad(); }));
+$("max").addEventListener("change", toon);
+
+zetPeriode("weekend"); laad();
+})();
+</script>
+</body>
+</html>

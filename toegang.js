@@ -30,7 +30,7 @@
   }
   /* Voorbeeldmodus ("Bekijk als rol", enkel beheerders). De rol staat op de sessie in de database;
      de browser onthoudt ze alleen om de balk te tonen. De startpagina ververst dit bij elk bezoek. */
-  var VB = "btc-voorbeeld", NAMEN = { lid: "lid", kapitein: "kapitein", trainer: "trainer", hoofdcoach: "hoofdcoach", commissie: "commissielid", bestuur: "bestuurslid" };
+  var VB = "btc-voorbeeld", NAMEN = { lid: "lid", kapitein: "kapitein", trainer: "trainer", hoofdcoach: "hoofdcoach", commissie: "commissielid", bestuur: "bestuurslid", communicatie: "communicatieverantwoordelijke" };
   function zet(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
   function voorbeeldStop() {
     var c = lees(SLEUTEL); zet(VB, null);

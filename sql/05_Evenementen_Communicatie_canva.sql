@@ -40,6 +40,11 @@ returns text[] language sql immutable set search_path to '' as $function$
   end
 $function$;
 
+-- Sessietabel: voorbeeldrol 'communicatie' toelaten (migratie voorbeeldrol_communicatie, 16/11/2026)
+alter table club.sessies drop constraint if exists sessies_voorbeeld_rol_check;
+alter table club.sessies add constraint sessies_voorbeeld_rol_check
+  check (voorbeeld_rol = any (array['lid','kapitein','trainer','hoofdcoach','commissie','bestuur','communicatie']));
+
 -- 2. club_mij: onderdeel 'communicatie'
 create or replace function public.club_mij(p_token text)
 returns jsonb language plpgsql stable security definer set search_path to '' as $function$

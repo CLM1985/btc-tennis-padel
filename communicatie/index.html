@@ -59,7 +59,12 @@ button.ghost{font:inherit;font-size:.85rem;font-weight:600;border:1px solid var(
 .post + .post{margin-top:10px}
 .post-kop{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:700;margin-bottom:6px}
 .post-kop span{font-weight:500;color:var(--muted);font-size:.85rem}
-.wed{display:grid;grid-template-columns:110px 1fr auto;gap:8px;padding:6px 0;border-top:1px dashed var(--line);font-size:.9rem}
+.wed{display:grid;grid-template-columns:110px 1fr auto auto;gap:8px;align-items:center;padding:6px 0;border-top:1px dashed var(--line);font-size:.9rem}
+.volg{display:flex;align-items:center;gap:6px;font-weight:500;font-size:.85rem;color:var(--muted)}
+.volg select{font-size:.85rem;padding:4px 6px}
+.schuif{display:flex;gap:4px}
+.schuif button{font:inherit;font-size:.8rem;line-height:1;width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);cursor:pointer}
+.schuif button:disabled{opacity:.3;cursor:default}
 .wed:first-of-type{border-top:0}
 .wed b{font-family:var(--f-display);font-size:1.05rem}
 .wed .sub{color:var(--muted);font-size:.82rem}
@@ -71,7 +76,7 @@ table.namen input{width:100%}
 .stap{margin:0;padding-left:20px;font-size:.9rem}
 .stap li + li{margin-top:4px}
 code{font-size:.85em;background:var(--padel);padding:1px 5px;border-radius:5px}
-@media (max-width:560px){.wed{grid-template-columns:1fr auto}.wed .wanneer{grid-column:1/-1}}
+@media (max-width:560px){.wed{grid-template-columns:1fr auto auto}.wed .wanneer{grid-column:1/-1}}
 </style>
 </head>
 <body>
@@ -103,6 +108,13 @@ code{font-size:.85em;background:var(--padel);padding:1px 5px;border-radius:5px}
     <div class="rij"><span class="lbl">Thuis / uit</span>
       <button type="button" class="kies" data-tu="alle" aria-pressed="true">Alle</button>
       <button type="button" class="kies" data-tu="thuis">Enkel thuis</button>
+    </div>
+    <div class="rij"><span class="lbl">Volgorde</span>
+      <button type="button" class="kies" data-volg="uur" aria-pressed="true">Dag en uur</button>
+      <button type="button" class="kies" data-volg="thuis">Thuis eerst</button>
+      <button type="button" class="kies" data-volg="uit">Uit eerst</button>
+      <button type="button" class="kies" data-volg="ploeg">Per ploeg</button>
+      <span class="muted" style="font-size:.85rem">Standaard voor alle posts. Per post aan te passen, of schuif een wedstrijd met ▲ ▼.</span>
     </div>
     <div class="rij"><label class="lbl" for="max">Max. per post</label>
       <select id="max"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option></select>
@@ -172,7 +184,10 @@ function periodeVan(soort) {
 }
 
 /* ---------- toestand ---------- */
-let data = [], keuze = { soort: "vooruit", groep: "dag", tu: "alle" };
+const OPSLAG = "btc.comm.volgorde";
+const bewaardeVolg = (() => { try { return localStorage.getItem(OPSLAG); } catch (e) { return null; } })();
+let data = [], keuze = { soort: "vooruit", groep: "dag", tu: "alle",
+  volg: ["uur", "thuis", "uit", "ploeg"].includes(bewaardeVolg) ? bewaardeVolg : "uur" };
 function drukKnop(attr, waarde) {
   document.querySelectorAll("[data-" + attr + "]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset[attr] === waarde)));
 }
@@ -201,6 +216,41 @@ function gefilterd() {
     (keuze.soort === "alles" || (keuze.soort === "vooruit" ? !w.gespeeld : w.gespeeld)) &&
     (keuze.tu === "alle" || w.thuis_uit === "thuis"));
 }
+/* ---------- volgorde ----------
+   Standaardregel geldt voor alle posts; per post (dag of week, vóór het opsplitsen in delen) kan een
+   andere regel of een eigen volgorde (▲▼). Sorteren gebeurt vóór het opsplitsen, zodat bv. "thuis eerst"
+   ook bepaalt welke wedstrijden in deel 1 en deel 2 komen. Eigen volgordes staan enkel in het geheugen
+   van de pagina; de standaardregel wordt per toestel onthouden. */
+const REGELS = { uur: "Dag en uur", thuis: "Thuis eerst", uit: "Uit eerst", ploeg: "Per ploeg" };
+const volgPerPost = new Map();                       // groepsleutel -> { regel, ids? }
+const wid = (w) => String(w.datum).slice(0, 10) + "|" + w.ploeg + "|" + w.tegenstander_bron;
+const naarPloeg = (a, b) => String(a.ploeg).localeCompare(String(b.ploeg), "nl", { numeric: true });
+const opTijd = (a, b) => String(a.datum).slice(0, 10).localeCompare(String(b.datum).slice(0, 10))
+  || (a.uur || "99:99").localeCompare(b.uur || "99:99") || naarPloeg(a, b);
+const thuisEerst = (w) => (w.thuis_uit === "thuis" ? 0 : 1);
+const VERGELIJK = {
+  uur: opTijd,
+  thuis: (a, b) => thuisEerst(a) - thuisEerst(b) || opTijd(a, b),
+  uit: (a, b) => thuisEerst(b) - thuisEerst(a) || opTijd(a, b),
+  ploeg: (a, b) => naarPloeg(a, b) || opTijd(a, b),
+};
+function geordend(sleutel, lijst) {
+  const v = volgPerPost.get(sleutel) || { regel: keuze.volg };
+  const basis = [...lijst].sort(VERGELIJK[v.regel] || VERGELIJK[keuze.volg]);
+  if (v.regel !== "eigen") return basis;
+  // Eigen volgorde: gekende wedstrijden in de gekozen volgorde, nieuwe (bv. na herladen) achteraan.
+  const pos = new Map(v.ids.map((id, i) => [id, i]));
+  return [...basis.filter((w) => pos.has(wid(w))).sort((a, b) => pos.get(wid(a)) - pos.get(wid(b))),
+          ...basis.filter((w) => !pos.has(wid(w)))];
+}
+function verschuif(p, index, stap) {
+  const ids = p.alle.map(wid), j = index + stap;
+  if (j < 0 || j >= ids.length) return;
+  [ids[index], ids[j]] = [ids[j], ids[index]];
+  volgPerPost.set(p.sleutel, { regel: "eigen", ids });
+  toon();
+}
+
 function posts() {
   const max = Number($("max").value), groepen = new Map();
   gefilterd().forEach((w) => {
@@ -209,7 +259,7 @@ function posts() {
   });
   const uit = [];
   [...groepen.keys()].sort().forEach((k) => {
-    const lijst = groepen.get(k), delen = Math.ceil(lijst.length / max);
+    const sleutel = keuze.groep + ":" + k, lijst = geordend(sleutel, groepen.get(k)), delen = Math.ceil(lijst.length / max);
     let titel, periode;
     if (keuze.groep === "dag") { titel = dagKort(alsDatum(k)); periode = k; }
     else {
@@ -219,7 +269,8 @@ function posts() {
       periode = k + " – " + iso(b);
     }
     for (let i = 0; i < delen; i++)
-      uit.push({ titel, periode, deel: delen > 1 ? (i + 1) + "/" + delen : "", wedstrijden: lijst.slice(i * max, (i + 1) * max) });
+      uit.push({ titel, periode, deel: delen > 1 ? (i + 1) + "/" + delen : "", wedstrijden: lijst.slice(i * max, (i + 1) * max),
+                 sleutel, alle: lijst, start: i * max, eersteDeel: i === 0, delen });
   });
   return uit;
 }
@@ -231,17 +282,35 @@ function toon() {
     box.appendChild(el("p", { class: "muted", text: data.length ? "Geen wedstrijden voor deze keuze." : "Geen padelinterclubwedstrijden in deze periode." }));
   }
   lijst.forEach((p) => {
-    const kaart = el("div", { class: "post" },
-      el("div", { class: "post-kop" }, el("div", { text: p.titel + (p.deel ? " (" + p.deel + ")" : "") }),
-        el("span", { text: p.wedstrijden.length + (p.wedstrijden.length === 1 ? " wedstrijd" : " wedstrijden") })));
-    p.wedstrijden.forEach((w) => {
-      const d = alsDatum(w.datum);
+    const rechts = el("span", { text: p.wedstrijden.length + (p.wedstrijden.length === 1 ? " wedstrijd" : " wedstrijden") });
+    const kop = el("div", { class: "post-kop" }, el("div", { text: p.titel + (p.deel ? " (" + p.deel + ")" : "") }), rechts);
+    // Volgordekeuze per post: op het eerste deel; geldt voor alle delen van dezelfde dag of week.
+    if (p.eersteDeel && p.alle.length > 1) {
+      const huidig = (volgPerPost.get(p.sleutel) || { regel: keuze.volg }).regel;
+      const sel = el("select", { "aria-label": "Volgorde voor " + p.titel });
+      Object.entries(REGELS).forEach(([k, t]) => sel.appendChild(el("option", { value: k, text: t + (k === keuze.volg ? " (standaard)" : "") })));
+      if (huidig === "eigen") sel.appendChild(el("option", { value: "eigen", text: "Eigen volgorde" }));
+      sel.value = huidig;
+      sel.addEventListener("change", () => {
+        if (sel.value === keuze.volg) volgPerPost.delete(p.sleutel); else volgPerPost.set(p.sleutel, { regel: sel.value });
+        toon();
+      });
+      kop.appendChild(el("label", { class: "volg" }, "Volgorde" + (p.delen > 1 ? " (alle delen)" : ""), sel));
+    }
+    const kaart = el("div", { class: "post" }, kop);
+    p.wedstrijden.forEach((w, i) => {
+      const d = alsDatum(w.datum), n = p.start + i;
+      const op = el("button", { type: "button", "aria-label": "Hoger: " + w.ploeg, title: "Hoger", disabled: n === 0, text: "▲" });
+      const neer = el("button", { type: "button", "aria-label": "Lager: " + w.ploeg, title: "Lager", disabled: n === p.alle.length - 1, text: "▼" });
+      op.addEventListener("click", () => verschuif(p, n, -1));
+      neer.addEventListener("click", () => verschuif(p, n, 1));
       kaart.appendChild(el("div", { class: "wed" },
         el("span", { class: "wanneer sub", text: dagKort(d) + (w.uur ? " · " + w.uur : "") }),
         el("div", {}, el("b", { text: w.ploeg }), " ",
           el("span", { text: (w.thuis_uit === "thuis" ? "THUIS · " : "UIT · ") + w.tegenstander }),
           el("div", { class: "sub", text: [w.ronde, w.kapitein ? "Kapitein: " + w.kapitein : null].filter(Boolean).join(" · ") })),
-        el("b", { text: uitslag(w) })));
+        el("b", { text: uitslag(w) }),
+        p.alle.length > 1 ? el("span", { class: "schuif" }, op, neer) : el("span")));
     });
     box.appendChild(kaart);
   });
@@ -326,6 +395,13 @@ document.querySelectorAll("[data-per]").forEach((b) => b.addEventListener("click
 document.querySelectorAll("[data-soort]").forEach((b) => b.addEventListener("click", () => { keuze.soort = b.dataset.soort; drukKnop("soort", keuze.soort); toon(); }));
 document.querySelectorAll("[data-groep]").forEach((b) => b.addEventListener("click", () => { keuze.groep = b.dataset.groep; drukKnop("groep", keuze.groep); toon(); }));
 document.querySelectorAll("[data-tu]").forEach((b) => b.addEventListener("click", () => { keuze.tu = b.dataset.tu; drukKnop("tu", keuze.tu); toon(); }));
+// Standaardvolgorde: geldt voor alle posts en wist de keuzes per post.
+document.querySelectorAll("[data-volg]").forEach((b) => b.addEventListener("click", () => {
+  keuze.volg = b.dataset.volg; drukKnop("volg", keuze.volg); volgPerPost.clear();
+  try { localStorage.setItem(OPSLAG, keuze.volg); } catch (e) {}
+  toon();
+}));
+drukKnop("volg", keuze.volg);
 ["van", "tot"].forEach((id) => $(id).addEventListener("change", () => { drukKnop("per", ""); laad(); }));
 $("max").addEventListener("change", toon);
 

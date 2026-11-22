@@ -348,6 +348,7 @@ h1::after{content:"";display:block;width:28px;height:3px;background:var(--lime);
         <input type="text" id="zoek" placeholder="Zoek naam">
         <select id="filtG" aria-label="Geslacht"><option value="">Iedereen</option><option value="V">Dames</option><option value="M">Heren</option></select>
         <label style="display:flex;gap:4px;align-items:center;font-size:.85rem"><input type="checkbox" id="filtOk" checked> Toegelaten in afdeling</label>
+        <select id="filtKl" aria-label="Klassement"><option value="">Alle klassementen</option></select>
       </div>
       <div class="muted" style="font-size:.82rem" id="kerninfo"></div>
       <div class="plist" id="plist"></div>
@@ -784,7 +785,15 @@ function renderConfig(){
 function renderSpelers(){
   const r=R(), zoek=$("zoek").value.trim().toLowerCase(), g=$("filtG").value, ok=$("filtOk").checked, K=plan.kern;
   $("bronlabel").textContent=huidigeLijst?`${huidigeLijst.spelers.length} op de lijst`:"";
-  const lijst=(huidigeLijst?.spelers||[]).filter(p=>(!zoek||String(p.naam).toLowerCase().includes(zoek))&&(!g||p.g===g)&&(!ok||(p.k>=r.kmin&&p.k<=r.kmax)||K.includes(p.id)))
+  // Klassementkeuze binnen de afdeling (bv. P300-reeks: P200, P300, P400); enkel als "Toegelaten in afdeling" aan staat.
+  // Op klassementspunten, zodat een sterklassement (P200*) bij P200 hoort.
+  const kSel=$("filtKl"), kVorige=kSel.value;
+  const kWaarden=[...new Set((huidigeLijst?.spelers||[]).filter(p=>(!g||p.g===g)&&p.k>=r.kmin&&p.k<=r.kmax).map(p=>p.k))].sort((a,b)=>a-b);
+  kSel.innerHTML=`<option value="">Alle klassementen</option>`+kWaarden.map(k=>`<option value="${k}">P${k}</option>`).join("");
+  kSel.value=kWaarden.includes(Number(kVorige))?kVorige:"";
+  kSel.hidden=!ok||kWaarden.length<2;
+  const kl=ok&&kSel.value!==""?Number(kSel.value):null;
+  const lijst=(huidigeLijst?.spelers||[]).filter(p=>(!zoek||String(p.naam).toLowerCase().includes(zoek))&&(!g||p.g===g)&&(!ok||(p.k>=r.kmin&&p.k<=r.kmax&&(kl==null||p.k===kl))||K.includes(p.id)))
     .sort((a,b)=>(K.includes(b.id)-K.includes(a.id))||sterkte(b)-sterkte(a)||String(a.naam).localeCompare(String(b.naam)));
   const dis=(!kanSchrijven&&!demo&&planPad)?"disabled":"";
   $("plist").innerHTML=lijst.length?lijst.map(p=>`<label class="prow ${p.k>=r.kmin&&p.k<=r.kmax?"":"off"}"><input type="checkbox" data-kern="${p.id}" ${K.includes(p.id)?"checked":""} ${dis}>
@@ -1261,7 +1270,7 @@ $("afd").addEventListener("change",e=>{ui.afdIdx=+e.target.value; ui.ploegId=nul
 $("ploeg").addEventListener("change",e=>{ui.ploegId=+e.target.value; render();});
 $("fases").addEventListener("click",e=>{const b=e.target.closest("[data-fase]"); if(!b) return; const f=b.dataset.fase, w=wedstrijdenVanPloeg();
   ui.slot=(FASES[f].slots.find(([id])=>w[id]&&!w[id].gespeeld)||FASES[f].slots.find(([id])=>w[id]||slotHeeftIets(id))||FASES[f].slots[0])[0]; render(false);});
-["zoek","filtG","filtOk"].forEach(id=>$(id).addEventListener("input",renderSpelers));
+["zoek","filtG","filtOk","filtKl"].forEach(id=>$(id).addEventListener("input",renderSpelers));
 $("plist").addEventListener("change",e=>{const v=e.target.dataset.kern; if(v==null) return; if(spelersOpen===null) spelersOpen=true;   // niet dichtklappen terwijl je kiest
   const id=+v, K=plan.kern, i=K.indexOf(id);
   if(e.target.checked&&i<0) K.push(id); if(!e.target.checked&&i>=0) K.splice(i,1); wijziging();});

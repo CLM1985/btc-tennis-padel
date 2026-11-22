@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <script src="../thema.js"></script>
 <script src="../toegang.js"></script>
+<script src="eindronde.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <link rel="manifest" href="../manifest.webmanifest">
 <meta name="theme-color" content="#152B46">
@@ -213,6 +214,35 @@ details.later>div{display:flex;flex-direction:column;gap:14px;margin-top:14px}
 .week .geen-week{display:none;font-size:13px;color:var(--muted);font-style:italic;margin:0}
 @media (max-width:700px){.raster{grid-template-columns:1fr}.dag.geen{display:none}.meters{grid-template-columns:1fr}.week .geen-week{display:block}}
 @media (max-width:520px){.wed{grid-template-columns:3.6em 1fr}.wed .rechts{grid-column:2;align-items:start;flex-direction:row;gap:10px}}
+/* Eindronde: kans op thuisspelen per ronde (enkel kapiteins) */
+.er-kaart{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.er-kaart.mijn{border-left:4px solid var(--accent)}
+.er-kop{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline}
+.er-kop b{font:700 20px/1.1 var(--display)}
+.er-kop span{font-size:13px;color:var(--muted)}
+.er-ronde{display:grid;grid-template-columns:6.5em 1fr auto;gap:2px 12px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.er-ronde .rn{font:700 14px var(--display);letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.er-ronde .wat{font-size:15px;min-width:0;overflow-wrap:anywhere}
+.er-ronde .wat small{display:block;font-size:12px;color:var(--muted)}
+.er-ronde .pct{font:700 18px var(--display);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.er-balk{height:8px;border-radius:4px;background:var(--bg);border:1px solid var(--line);overflow:hidden;margin-top:4px}
+.er-balk i{display:block;height:100%;background:var(--court)}
+.er-scen{grid-column:2/-1;margin:4px 0 0;padding:0;list-style:none;font-size:13px;color:var(--muted);display:grid;gap:2px}
+.er-scen b{color:var(--ink);font-weight:600}
+.er-scen .t{color:var(--turf);font-weight:700} .er-scen .u{color:var(--err);font-weight:700}
+.er-thuis{color:var(--turf);font-weight:700} .er-uit{color:var(--err);font-weight:700}
+.er-tabel{border-top:1px solid var(--line);padding-top:8px}
+.er-tabel>summary{cursor:pointer;font:600 14px var(--body);color:var(--court);list-style:none}
+.er-tabel>summary::-webkit-details-marker{display:none}
+.er-tabel .rondes{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.er-tabel h4{margin:0 0 4px;font:700 14px var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.er-paar{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed var(--line)}
+.er-paar button{appearance:none;text-align:left;font:13px/1.3 var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;cursor:pointer;min-width:0;overflow-wrap:anywhere}
+.er-paar button[disabled]{cursor:default}
+.er-paar button.win{background:var(--court-soft);border-color:var(--court);font-weight:600}
+.er-paar button.wa{background:var(--warn-soft);border-color:var(--warn);font-weight:600}
+.er-paar button.btc{border-left:4px solid var(--accent)}
+@media (max-width:520px){.er-ronde{grid-template-columns:5.2em 1fr}.er-ronde .pct{grid-column:2;text-align:left}.er-ronde .pct:empty{display:none}.er-scen{grid-column:1/-1}}
 .bewaard{font-size:12px;color:var(--turf);min-height:1em}
 footer{font-size:13px;color:var(--muted);text-align:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -229,6 +259,7 @@ footer{font-size:13px;color:var(--muted);text-align:center}
     <button type="button" role="tab" id="tabRes" aria-selected="false" aria-controls="paneRes">Resultaten</button>
     <button type="button" role="tab" id="tabIn" aria-selected="true" aria-controls="paneIn">Voorjaarsinterclub</button>
     <button type="button" role="tab" id="tabMijn" aria-selected="false" aria-controls="paneMijn">Mijn ploegen</button>
+    <button type="button" role="tab" id="tabEr" aria-selected="false" aria-controls="paneEr" hidden>Eindronde</button>
     <button type="button" role="tab" id="tabOv" aria-selected="false" aria-controls="paneOv" hidden>Overzicht</button>
   </nav>
   <div id="laden" class="notice">Laden…</div>
@@ -328,6 +359,18 @@ footer{font-size:13px;color:var(--muted);text-align:center}
     </div>
   </div>
 
+  <!-- ===================== Eindronde (kapiteins) ===================== -->
+  <div id="paneEr" role="tabpanel" aria-labelledby="tabEr" hidden>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="chips" role="group" aria-label="Filter">
+        <label class="chip"><input type="radio" name="erFilter" value="mijn" checked><span>Mijn ploegen</span></label>
+        <label class="chip"><input type="radio" name="erFilter" value="alle"><span>Alle BTC-ploegen</span></label>
+      </div>
+      <div id="erLijst" style="display:flex;flex-direction:column;gap:14px"></div>
+      <p class="hint">Wie thuis speelt in de eindronde (reglement Tennis en Padel Vlaanderen, art. 7.3.2.2): in de eerste ronde de poulewinnaar; daarna de ploeg met de meeste uitwedstrijden in de eindronde (vrij in de eerste ronde telt als thuis). Bij gelijkstand de ploeg die eerst uitgeloot werd: eerst de ploegen die de eerste ronde speelden, van boven naar beneden in de tabel, daarna de ploegen die vrij waren. Staat de ontmoeting al gepland bij Tennis en Padel Vlaanderen, dan geldt die planning ("bevestigd"). De kans geldt als je ploeg die ronde haalt, met gelijke kansen voor elke nog te spelen ontmoeting. Tik in de eindtabel op een ploeg om te rekenen met een andere winnaar; die keuze geldt voor alle BTC-ploegen in dezelfde tabel en wordt niet bewaard. De Vlaamse Finals tellen niet: daar kiest Padel Vlaanderen de locatie.</p>
+    </div>
+  </div>
+
   <!-- ===================== Mijn ploegen ===================== -->
   <div id="paneMijn" role="tabpanel" aria-labelledby="tabMijn" hidden>
     <div id="mijnLijst" style="display:flex;flex-direction:column;gap:12px"></div>
@@ -392,12 +435,13 @@ footer{font-size:13px;color:var(--muted);text-align:center}
   const huidigeReeks = () => { const r = document.querySelector("input[name=reeks]:checked"); return r ? r.value : null; };
 
   /* ---------- Tabs ---------- */
-  const TABS = [["tabKal","paneKal"],["tabRes","paneRes"],["tabIn","paneIn"],["tabMijn","paneMijn"],["tabOv","paneOv"]];
+  const TABS = [["tabKal","paneKal"],["tabRes","paneRes"],["tabIn","paneIn"],["tabMijn","paneMijn"],["tabEr","paneEr"],["tabOv","paneOv"]];
   function toonTab(id){
     TABS.forEach(([t,p]) => { $(t).setAttribute("aria-selected", String(t===id)); $(p).hidden = t!==id; });
-    const naam = {tabKal:"#kalender", tabRes:"#resultaten", tabIn:"#inschrijven", tabMijn:"#mijn", tabOv:"#overzicht"}[id];
+    const naam = {tabKal:"#kalender", tabRes:"#resultaten", tabIn:"#inschrijven", tabMijn:"#mijn", tabEr:"#eindronde", tabOv:"#overzicht"}[id];
     history.replaceState(null, "", location.pathname + naam);
     if(id==="tabMijn") toonMijn();
+    if(id==="tabEr") toonEindronde();
     if(id==="tabOv") laadOverzicht();
     if(id==="tabKal") laadKalender();
     if(id==="tabRes") laadResultaten();
@@ -1035,6 +1079,182 @@ footer{font-size:13px;color:var(--muted);text-align:center}
     const a = el("a",{href:URL.createObjectURL(blob),download:"interclub-" + pid + ".csv"}); document.body.appendChild(a); a.click(); a.remove();
   });
 
+  /* ---------- Eindronde: thuis of uit in de volgende rondes (enkel kapiteins) ---------- */
+  // Rekenregels in eindronde.js (reglement art. 7.3.2.2); gegevens uit club_ic_eindronde.
+  let er = null;
+  const watAls = {};   // "table_id|tab_id" -> {"ronde:positie": winnaar}
+  async function laadEindronde(){
+    try{
+      const d = await rpc("club_ic_eindronde", {p_token:TOKEN});
+      if(d && !d.fout){ er = d; $("tabEr").hidden = !(d.tabellen||[]).length; }
+    }catch(_){}
+  }
+  const pct = x => Math.round(x * 100) + "%";
+  // Paren uit de database -> tabel voor de rekenmodule; gekozen winnaars (wat-als) worden doorgeschoven.
+  function bouwTabel(t){
+    const keuze = watAls[t.table_id + "|" + t.tab_id] || {};
+    const rondes = [];
+    (t.paren||[]).forEach(x => {
+      const r = x.ronde - 1;
+      (rondes[r] = rondes[r] || [])[x.positie] = {a:x.a, b:x.b, thuis:x.thuis, gespeeld:x.gespeeld, datum:x.datum,
+        winnaar:x.winnaar, matchen_a:x.matchen_a, matchen_b:x.matchen_b, watAls:false};
+    });
+    for(let r = 0; r < rondes.length; r++){
+      const ronde = rondes[r] = rondes[r] || [];
+      for(let p = 0; p < ronde.length; p++) if(!ronde[p]) ronde[p] = {a:null, b:null};
+      if(r > 0){
+        const n = Math.max(ronde.length, Math.ceil((rondes[r-1]||[]).length / 2));
+        for(let p = 0; p < n; p++){
+          const m = ronde[p] = ronde[p] || {a:null, b:null};
+          const l = rondes[r-1][2*p], q = rondes[r-1][2*p+1];
+          if(m.a == null && l && l.winnaar != null) m.a = l.winnaar;
+          if(m.b == null && q && q.winnaar != null) m.b = q.winnaar;
+        }
+      }
+      ronde.forEach((m, p) => {
+        const k = keuze[r + ":" + p];
+        if(!m.gespeeld && k != null && (k === m.a || k === m.b)){ m.winnaar = k; m.watAls = true; }
+      });
+    }
+    return {rondes};
+  }
+  function namenVan(t){
+    const n = new Map();
+    (t.paren||[]).forEach(x => { if(x.a != null && x.a_naam) n.set(x.a, x.a_naam); if(x.b != null && x.b_naam) n.set(x.b, x.b_naam); });
+    (t.btc||[]).forEach(b => n.set(b.ploeg_id, "BTC " + ploegKort(b.ploeg)));
+    return id => n.get(id) || "nog te bepalen";
+  }
+  function reden(s){
+    if(s.eigenUit.length !== 1 || s.uitTegenstander.length !== 1) return "hangt af van wie eerder thuis speelt";
+    const e = s.eigenUit[0], u = s.uitTegenstander[0];
+    if(e > u) return "jullie meer uitwedstrijden (" + e + " tegen " + u + ")";
+    if(e < u) return "zij meer uitwedstrijden (" + u + " tegen " + e + ")";
+    return "evenveel uitwedstrijden (" + e + "), " + (s.vroegerUitgeloot ? "jullie eerst uitgeloot" : "zij eerst uitgeloot");
+  }
+  function erRonde(naamRonde, item, m, ploeg, naam){
+    const rij = el("div",{class:"er-ronde"}, el("span",{class:"rn",text:naamRonde}));
+    const kant = m.a === ploeg ? "a" : "b";
+    const tegen = kant === "a" ? m.b : m.a;
+    if(item.bron === "vrij"){
+      rij.append(el("span",{class:"wat"}, "Vrij", el("small",{text:"telt als thuiswedstrijd"})), el("span",{class:"pct"}));
+      return rij;
+    }
+    if(item.bron === "tabel"){
+      const thuis = item.kansThuis === 1;
+      const wat = el("span",{class:"wat"}, el("span",{class:thuis ? "er-thuis" : "er-uit",text:thuis ? "Thuis" : "Uit"}), " tegen " + naam(tegen));
+      let rechts = "";
+      if(m.gespeeld){
+        const mv = kant === "a" ? m.matchen_a : m.matchen_b, mt = kant === "a" ? m.matchen_b : m.matchen_a;
+        rechts = (m.winnaar === ploeg ? "W " : "V ") + (mv ?? "") + "-" + (mt ?? "");
+        wat.appendChild(el("small",{text:"gespeeld" + (m.datum ? " · " + datum(m.datum) : "")}));
+      } else wat.appendChild(el("small",{text:"bevestigd door Tennis en Padel Vlaanderen" + (m.datum ? " · " + datum(m.datum) : "")}));
+      rij.append(wat, el("span",{class:"pct",text:rechts}));
+      return rij;
+    }
+    const k = item.kansThuis;
+    const zeker = k === 1 || k === 0;
+    const wat = el("span",{class:"wat"},
+      k === 1 ? el("span",{class:"er-thuis",text:"Zeker thuis"}) : k === 0 ? el("span",{class:"er-uit",text:"Zeker uit"})
+        : el("span",{class:k >= 0.5 ? "er-thuis" : "er-uit",text:pct(k) + " kans op thuis"}),
+      el("small",{text:"berekend, als jullie deze ronde halen"}));
+    if(!zeker) wat.appendChild(el("div",{class:"er-balk"}, el("i",{style:"width:" + pct(k || 0)})));
+    rij.append(wat, el("span",{class:"pct",text:zeker ? "" : pct(k)}));
+    const lijst = el("ul",{class:"er-scen"});
+    const sc = item.scenarios || [];
+    sc.slice(0, 5).forEach(s => lijst.appendChild(el("li",{},
+      el("span",{class:s.kansThuis >= 0.5 ? "t" : "u",text:s.kansThuis === 1 ? "Thuis" : s.kansThuis === 0 ? "Uit" : pct(s.kansThuis) + " thuis"}),
+      " tegen ", el("b",{text:naam(s.tegenstander)}), " (" + pct(s.kans) + " kans op die tegenstander): " + reden(s))));
+    if(sc.length > 5) lijst.appendChild(el("li",{text:"en " + (sc.length - 5) + " andere mogelijke tegenstanders"}));
+    rij.appendChild(lijst);
+    return rij;
+  }
+  function erTabel(t, tabel, naam, btc, ploeg){
+    const sleutel = t.table_id + "|" + t.tab_id, kaartSleutel = sleutel + "|" + ploeg;
+    const d = el("details",{class:"er-tabel"}, el("summary",{text:"Eindtabel en wat-als"}));
+    if(open[kaartSleutel]) d.open = true;
+    d.addEventListener("toggle", () => { open[kaartSleutel] = d.open; });
+    const box = el("div",{class:"rondes"});
+    const keuze = watAls[sleutel] || {};
+    if(Object.keys(keuze).length){
+      const wis = el("button",{type:"button",class:"ghost",text:"Wis de gekozen winnaars"});
+      wis.addEventListener("click", () => { delete watAls[sleutel]; toonEindronde(); });
+      box.appendChild(wis);
+    }
+    // Volledig gespeelde rondes weglaten: tonen vanaf de eerste ronde met een nog te spelen ontmoeting.
+    const openPaar = (m, r) => !m.gespeeld && (r > 0 || (m.a != null && m.b != null));
+    let vanaf = tabel.rondes.findIndex((ronde, r) => ronde.some(m => openPaar(m, r)));
+    if(vanaf < 0) vanaf = tabel.rondes.length - 1;
+    tabel.rondes.forEach((ronde, r) => {
+      if(r < vanaf) return;
+      const blok = el("div",{}, el("h4",{text:(t.rondes||[])[r] || ("Ronde " + (r+1))}));
+      ronde.forEach((m, p) => {
+        if(m.a == null && m.b == null && r === 0) return;
+        const paar = el("div",{class:"er-paar"});
+        [m.a, m.b].forEach((id, i) => {
+          const tekst = (id == null ? (r === 0 ? "vrij" : "nog te bepalen") : naam(id)) +
+            (m.thuis === (i ? "b" : "a") && id != null ? " (T)" : "");
+          const b = el("button",{type:"button",text:tekst});
+          if(id != null && btc.has(id)) b.classList.add("btc");
+          if(m.winnaar != null && m.winnaar === id) b.classList.add(m.watAls ? "wa" : "win");
+          const kan = !m.gespeeld && m.a != null && m.b != null && id != null;
+          if(!kan) b.disabled = true;
+          else b.addEventListener("click", () => {
+            const k = watAls[sleutel] = watAls[sleutel] || {};
+            const kk = r + ":" + p;
+            if(k[kk] === id) delete k[kk]; else k[kk] = id;
+            open[kaartSleutel] = true; toonEindronde();
+          });
+          paar.appendChild(b);
+        });
+        blok.appendChild(paar);
+      });
+      box.appendChild(blok);
+    });
+    box.appendChild(el("p",{class:"hint",text:"Groen = winnaar volgens Tennis en Padel Vlaanderen, oranje = door jou gekozen winnaar, (T) = thuis volgens de planning. Tik op een ploeg in een nog te spelen ontmoeting om ze te laten winnen."}));
+    d.appendChild(box);
+    return d;
+  }
+  const open = {};
+  function toonEindronde(){
+    const box = $("erLijst"); box.textContent = "";
+    if(!er || !(er.tabellen||[]).length){
+      box.appendChild(el("p",{class:"notice",text:"Er loopt geen eindronde met BTC-ploegen. Deze pagina vult zich zodra de eindronde-tabel gepubliceerd is."}));
+      return;
+    }
+    const enkelMijn = (document.querySelector("input[name=erFilter]:checked")||{}).value !== "alle";
+    let n = 0;
+    er.tabellen.forEach(t => {
+      const tabel = bouwTabel(t), naam = namenVan(t);
+      const btc = new Set((t.btc||[]).map(b => b.ploeg_id));
+      (t.btc||[]).forEach(b => {
+        if(enkelMijn && !b.mijn) return;
+        n++;
+        const vz = window.Eindronde.vooruitzicht(tabel, b.ploeg_id);
+        const laatste = vz[vz.length - 1];
+        const finale = laatste && laatste.ronde === tabel.rondes.length - 1;
+        const fm = laatste && tabel.rondes[laatste.ronde][laatste.positie];
+        const status = laatste && laatste.uitgeschakeld ? ["weg", (laatste.watAls ? "Wat-als: uitgeschakeld in " : "Uitgeschakeld in ") + ((t.rondes||[])[laatste.ronde] || "ronde " + (laatste.ronde+1))]
+          : finale && fm && fm.gespeeld && fm.winnaar === b.ploeg_id ? ["ok", "Winnaar eindronde"]
+          : ["ok", "Nog in de race"];
+        const pouleCode = (t.paren||[]).filter(x => x.ronde === 1).map(x => x.a === b.ploeg_id ? [x.a_poule, x.a_plaats] : x.b === b.ploeg_id ? [x.b_poule, x.b_plaats] : null).find(Boolean);
+        const kaart = el("article",{class:"er-kaart" + (b.mijn ? " mijn" : "")},
+          el("div",{class:"er-kop"}, el("b",{text:ploegKort(b.ploeg)}),
+            el("span",{text:[t.competitie, pouleCode && pouleCode[0] ? "poule " + pouleCode[0] + ", plaats " + pouleCode[1] : null, b.kapitein ? "kapitein " + b.kapitein : null].filter(Boolean).join(" · ")})),
+          el("div",{class:"tags"}, el("span",{class:"tag " + status[0],text:status[1]})));
+        vz.forEach(item => {
+          const m = tabel.rondes[item.ronde][item.positie];
+          kaart.appendChild(erRonde((t.rondes||[])[item.ronde] || "Ronde " + (item.ronde+1), item, m, b.ploeg_id, naam));
+        });
+        kaart.appendChild(erTabel(t, tabel, naam, btc, b.ploeg_id));
+        box.appendChild(kaart);
+      });
+    });
+    if(!n) box.appendChild(el("p",{class:"notice",text:"Geen van jouw ploegen speelt in deze eindronde. Kies 'Alle BTC-ploegen' om de andere ploegen te bekijken."}));
+    if(er.periode) box.appendChild(el("p",{class:"hint",text:er.periode + " · bijgewerkt van Tennis en Padel Vlaanderen" +
+      (er.tabellen[0] && er.tabellen[0].bijgewerkt ? " (laatst " + new Date(er.tabellen[0].bijgewerkt).toLocaleString("nl-BE",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}) + ")" : "")}));
+  }
+  document.querySelectorAll("input[name=erFilter]").forEach(i => i.addEventListener("change", toonEindronde));
+
   /* ---------- Afmelden en start ---------- */
   $("afmelden").addEventListener("click", () => window.BTC.afmelden());
   async function herlaad(){ try{ const d = await rpc("club_ic_data", {p_token:TOKEN}); if(!d.fout) data = d; }catch(_){} }
@@ -1063,9 +1283,11 @@ footer{font-size:13px;color:var(--muted);text-align:center}
         }
         toonPeriode(periodes[0]); bouwVelden(); vulContact();
       }
+      const erKlaar = laadEindronde();
       const h = location.hash;
       toonTab(h==="#mijn" ? "tabMijn" : (h==="#overzicht" && data.beheer) ? "tabOv" : h==="#kalender" ? "tabKal" : h==="#resultaten" ? "tabRes"
             : h==="#inschrijven" ? "tabIn" : periodes.length ? "tabIn" : "tabKal");
+      erKlaar.then(() => { if(h==="#eindronde" && !$("tabEr").hidden) toonTab("tabEr"); });
     }catch(err){
       if(err.message==="niet aangemeld") return;
       $("laden").hidden = true;

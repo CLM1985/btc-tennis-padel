@@ -242,6 +242,8 @@ details.later>div{display:flex;flex-direction:column;gap:14px;margin-top:14px}
 .er-paar button.win{background:var(--court-soft);border-color:var(--court);font-weight:600}
 .er-paar button.wa{background:var(--warn-soft);border-color:var(--warn);font-weight:600}
 .er-paar button.btc{border-left:4px solid var(--accent)}
+.er-paar .th{display:inline-block;margin-left:6px;font:700 11px/1.4 var(--body);text-transform:uppercase;letter-spacing:.04em;padding:0 6px;border-radius:999px;background:var(--turf);color:var(--surface);white-space:nowrap}
+.er-paar .th.ber{background:transparent;color:var(--turf);border:1px dashed var(--turf)}
 @media (max-width:520px){.er-ronde{grid-template-columns:5.2em 1fr}.er-ronde .pct{grid-column:2;text-align:left}.er-ronde .pct:empty{display:none}.er-scen{grid-column:1/-1}}
 .bewaard{font-size:12px;color:var(--turf);min-height:1em}
 footer{font-size:13px;color:var(--muted);text-align:center}
@@ -1191,9 +1193,12 @@ footer{font-size:13px;color:var(--muted);text-align:center}
         if(m.a == null && m.b == null && r === 0) return;
         const paar = el("div",{class:"er-paar"});
         [m.a, m.b].forEach((id, i) => {
-          const tekst = (id == null ? (r === 0 ? "vrij" : "nog te bepalen") : naam(id)) +
-            (m.thuis === (i ? "b" : "a") && id != null ? " (T)" : "");
-          const b = el("button",{type:"button",text:tekst});
+          const kant = i ? "b" : "a";
+          const tekst = id == null ? (r === 0 ? "vrij" : "nog te bepalen") : naam(id);
+          const thuisLabel = id == null ? null
+            : m.thuis === kant ? el("span",{class:"th",text:"thuis"})
+            : m.thuisBerekend === kant ? el("span",{class:"th ber",text:"thuis (berekend)"}) : null;
+          const b = el("button",{type:"button"}, tekst, thuisLabel);
           if(id != null && btc.has(id)) b.classList.add("btc");
           if(m.winnaar != null && m.winnaar === id) b.classList.add(m.watAls ? "wa" : "win");
           const kan = !m.gespeeld && m.a != null && m.b != null && id != null;
@@ -1210,7 +1215,7 @@ footer{font-size:13px;color:var(--muted);text-align:center}
       });
       box.appendChild(blok);
     });
-    box.appendChild(el("p",{class:"hint",text:"Groen = winnaar volgens Tennis en Padel Vlaanderen, oranje = door jou gekozen winnaar, (T) = thuis volgens de planning. Tik op een ploeg in een nog te spelen ontmoeting om ze te laten winnen."}));
+    box.appendChild(el("p",{class:"hint",text:"Links of rechts zegt niets over thuis of uit: dat is enkel de plaats in de tabel. Het label 'thuis' staat bij de ploeg die thuis speelt volgens de planning van Tennis en Padel Vlaanderen; 'thuis (berekend)' volgens de regel, met de winnaars zoals ze nu in de tabel staan (ook jouw keuzes). Groen = winnaar volgens Tennis en Padel Vlaanderen, oranje = door jou gekozen winnaar. Tik op een ploeg in een nog te spelen ontmoeting om ze te laten winnen."}));
     d.appendChild(box);
     return d;
   }
@@ -1224,7 +1229,7 @@ footer{font-size:13px;color:var(--muted);text-align:center}
     const enkelMijn = (document.querySelector("input[name=erFilter]:checked")||{}).value !== "alle";
     let n = 0;
     er.tabellen.forEach(t => {
-      const tabel = bouwTabel(t), naam = namenVan(t);
+      const tabel = window.Eindronde.thuisInvullen(bouwTabel(t)), naam = namenVan(t);
       const btc = new Set((t.btc||[]).map(b => b.ploeg_id));
       (t.btc||[]).forEach(b => {
         if(enkelMijn && !b.mijn) return;

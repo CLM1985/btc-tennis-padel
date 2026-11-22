@@ -176,7 +176,29 @@
     return res;
   }
 
-  const api = { volgorde, thuisVolgensRegel, uitTot, toets, vooruitzicht };
+  // Vult voor elke ontmoeting met twee gekende ploegen zonder planning de berekende thuisploeg in
+  // (m.thuisBerekend = 'a' | 'b'), ronde per ronde, met de geplande of berekende thuis van vorige rondes.
+  // Gebruikt de winnaars zoals ze in de tabel staan (ook gekozen winnaars in wat-als).
+  function thuisInvullen(tabel) {
+    const rang = volgorde(tabel), uit = new Map();
+    tabel.rondes.forEach((ronde, r) => {
+      ronde.forEach(m => {
+        m.thuisBerekend = null;
+        if (r > 0 && m.a != null && m.b != null && !m.thuis) {
+          m.thuisBerekend = thuisVolgensRegel(m.a, uit.get(m.a) || 0, m.b, uit.get(m.b) || 0, rang) === m.a ? 'a' : 'b';
+        }
+      });
+      ronde.forEach(m => {
+        const t = m.thuis || m.thuisBerekend;
+        if (m.a == null || m.b == null || !t) return;
+        const u = t === 'a' ? m.b : m.a;
+        uit.set(u, (uit.get(u) || 0) + 1);
+      });
+    });
+    return tabel;
+  }
+
+  const api = { volgorde, thuisVolgensRegel, uitTot, toets, vooruitzicht, thuisInvullen };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Eindronde = api;
 })(typeof window !== 'undefined' ? window : globalThis);
